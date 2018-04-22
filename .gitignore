@@ -1,5 +1,5 @@
 
-# Created by https://www.gitignore.io/api/venv,linux,macos,python,windows,sublimetext
+# Created by https://www.gitignore.io/api/linux,macos,python,windows,sublimetext
 
 ## Generated files ###
 result/
@@ -89,6 +89,7 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+.pytest_cache/
 nosetests.xml
 coverage.xml
 *.cover
@@ -189,7 +190,6 @@ include/
 # Window
 Include/
 Lib/
-Scripts/
 
 # Shared
 pyvenv.cfg
