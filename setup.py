@@ -9,7 +9,9 @@ requires = [
 
 test_requires = [
     'pytest',
-    'pytest-cov'
+    'pytest-cov',
+    'pytest-mock',
+    'pytest-watch'
 ]
 
 setup(
