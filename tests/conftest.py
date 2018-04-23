@@ -14,26 +14,38 @@ TEST_PAGE = '''
     <option>4</option>
 </select>
 
-<a href="/next/page"><img src="http://files.co/test.png" id="1"></a>
-<a href="/next/page"><img src="http://files.co/test.png" id="2"></a>
-<a href="/next/page"><img src="http://files.co/test.png" id="3"></a>
-<a href="/next/page"><img src="http://files.co/test.png" id="4"></a>
+<a href="/001/page/2"><img src="http://files.co/test.png" id="1"></a>
+<a href="/001/page/3"><img src="http://files.co/test.png" id="2"></a>
+<a href="/001/page/4"><img src="http://files.co/test.png" id="3"></a>
+<a href="/002/page/1"><img src="http://files.co/test.png" id="4"></a>
 '''
 
 
-@pytest.fixture(autouse=True)
-def offline_requests(monkeypatch):
-    """Ensure that no HTTP requests are made when pinging URLs."""
+def requests_patch(**kwargs):
+    """Patch for any requests method."""
     def req(url):
         if not url.startswith('http'):
             raise requests.exceptions.MissingSchema
 
         class Response(object):
-            status_code = 200
-            text = TEST_PAGE
-            content = b'\x00\x00\x00\x00\x00\x00'
+            def __init__(self, **kwargs):
+                for key, value in kwargs.items():
+                    try:
+                        value = next(value)
+                    except TypeError:
+                        pass
+                    setattr(self, key, value)
 
-        return Response
+        return Response(**kwargs)
+
+    return req
+
+
+@pytest.fixture(autouse=True)
+def offline_requests(monkeypatch):
+    """Ensure that no HTTP requests are made when pinging URLs."""
+    req = requests_patch(status_code=200, text=TEST_PAGE,
+                         content=b'\x00\x00\x00\x00\x00\x00')
 
     monkeypatch.setattr(requests, 'head', req)
     monkeypatch.setattr(requests, 'get', req)
@@ -50,8 +62,7 @@ def fail_response(request):
     """Create a Response with a failing status code or exception."""
     def req(url):
         if request.param == 'error':
-            from requests.exceptions import ConnectionError
-            raise ConnectionError
+            raise requests.exceptions.ConnectionError
 
         class Response(object):
             status_code = request.param
