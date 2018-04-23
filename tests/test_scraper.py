@@ -156,6 +156,20 @@ def test_generate_multipage_chapter_raises_error_for_bad_mangasource(value):
         scr.Scraper._generate_multipage_chapter('1', 'http://t.com/', value)
 
 
+def test_generate_multipage_chapter_raises_error_for_empty_chap(dummy_source):
+    """Test _generate_multipage_chapter raises ValueError for empty chap."""
+    with pytest.raises(ValueError):
+        scr.Scraper._generate_multipage_chapter(
+            '', 'http://t.com/', dummy_source)
+
+
+def test_generate_multipage_chapter_raises_error_for_empty_url(dummy_source):
+    """Test _generate_multipage_chapter raises ValueError for empty url."""
+    with pytest.raises(ValueError):
+        scr.Scraper._generate_multipage_chapter(
+            '1', '', dummy_source)
+
+
 def test_generate_multipage_chapter_returns_generator(dummy_source):
     """Test _generate_multipage_chapter returns a generator of tuples."""
     pages = scr.Scraper._generate_multipage_chapter(
@@ -227,6 +241,20 @@ def test_generate_singlepage_chapter_raises_error_for_bad_mangasource(value):
     """Test _generate_singlepage_chapter raises a TypeError for bad source."""
     with pytest.raises(TypeError):
         scr.Scraper._generate_singlepage_chapter('1', 'http://t.com/', value)
+
+
+def test_generate_singlepage_chapter_raises_error_for_empty_chap(dummy_source):
+    """Test _generate_singlepage_chapter raises ValueError for empty chap."""
+    with pytest.raises(ValueError):
+        scr.Scraper._generate_singlepage_chapter(
+            '', 'http://t.com/', dummy_source)
+
+
+def test_generate_singlepage_chapter_raises_error_for_empty_url(dummy_source):
+    """Test _generate_singlepage_chapter raises ValueError for empty url."""
+    with pytest.raises(ValueError):
+        scr.Scraper._generate_singlepage_chapter(
+            '1', '', dummy_source)
 
 
 def test_generate_singlepage_chapter_returns_generator(dummy_source):
