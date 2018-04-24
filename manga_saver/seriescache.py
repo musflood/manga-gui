@@ -35,6 +35,14 @@ class SeriesCache(object):
         """Display the name of the series."""
         return self.title
 
+    def __len__(self):
+        """Get the number of sources in the series cache."""
+        return len(self._index_pages)
+
+    def __contains__(self, item):
+        """Check if the item is in the cache."""
+        return repr(item) in self._index_pages
+
     def update_index(self, source, index_url=None):
         """Store the html for the index page at a source.
 
@@ -43,7 +51,7 @@ class SeriesCache(object):
         """
         if not isinstance(source, MangaSource):
             raise TypeError('source must be a MangaSource.')
-        if index_url and type(index_url) is not str:
+        if index_url is not None and type(index_url) is not str:
             raise TypeError('URL must be a string.')
 
         src_name = repr(source)

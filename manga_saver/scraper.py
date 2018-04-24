@@ -134,7 +134,10 @@ class Scraper(object):
 
         def gen(url):
             while chapter in url:
-                data, ext, url, _ = cls._get_page(url, source)
+                try:
+                    data, ext, url, _ = cls._get_page(url, source)
+                except ValueError:
+                    break
                 yield data, ext
         return gen(url)
 

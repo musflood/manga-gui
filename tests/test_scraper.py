@@ -217,6 +217,38 @@ def test_generate_multipage_chapter_yields_all_images_in_chapter(dummy_source,
     assert imgs[0] != imgs[1] != imgs[2] != imgs[3]
 
 
+def test_generate_multipage_chapter_works_for_last_chapter(dummy_source,
+                                                           monkeypatch):
+    """Test _generate_multipage_chapter still works for final chapter."""
+    import requests
+
+    def page_txt(ch, ch_len):
+        for n in range(2, ch_len * 2):
+            pg = n // 2
+            yield f'''<a href="/{ch}/page/{pg % ch_len + 1}">
+            <img src="https://file.co/img.png">
+            </a>'''
+        yield f'''<a href="/{ch}/end">
+        <img src="https://file.co/img.png">
+        </a>'''
+        yield ''
+        yield f'<p>Chapter {ch} is the last one!</p>'
+
+    def content():
+        n = 1
+        while True:
+            yield b'\x00' * (n // 2)
+            n += 1
+
+    req = requests_patch(text=page_txt(2, 4), content=content())
+    monkeypatch.setattr(requests, 'get', req)
+
+    pages = scr.Scraper._generate_multipage_chapter(
+            '2', 'http://t.com/2/page/1', dummy_source)
+    imgs = [pg for pg in pages]
+    assert len(imgs) == 4
+
+
 @pytest.mark.parametrize('val', [500, [], 2.1, {}])
 def test_generate_singlepage_chapter_raises_error_for_non_string_chapter(val):
     """Test _generate_singlepage_chapter raises a TypeError for bad chapter."""

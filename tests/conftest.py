@@ -1,12 +1,17 @@
 """Fixtures for testing the manga_saver package."""
+from datetime import datetime
+
 from bs4 import BeautifulSoup
 import pytest
 import requests
 
-from .context import mangasource as ms
+from .context import mangasource
+from .context import seriescache
 
 
 TEST_PAGE = '''
+<head>{}</head>
+<body>
 <select>
     <option>1</option>
     <option>2</option>
@@ -18,6 +23,7 @@ TEST_PAGE = '''
 <a href="/001/page/3"><img src="http://files.co/test.png" id="2"></a>
 <a href="/001/page/4"><img src="http://files.co/test.png" id="3"></a>
 <a href="/002/page/1"><img src="http://files.co/test.png" id="4"></a>
+</body>
 '''
 
 
@@ -33,7 +39,10 @@ def requests_patch(**kwargs):
                     try:
                         value = next(value)
                     except TypeError:
-                        pass
+                        try:
+                            value = value(url)
+                        except TypeError:
+                            pass
                     setattr(self, key, value)
 
         return Response(**kwargs)
@@ -44,7 +53,7 @@ def requests_patch(**kwargs):
 @pytest.fixture(autouse=True)
 def offline_requests(monkeypatch):
     """Ensure that no HTTP requests are made when pinging URLs."""
-    req = requests_patch(status_code=200, text=TEST_PAGE,
+    req = requests_patch(status_code=200, text=TEST_PAGE.format,
                          content=b'\x00\x00\x00\x00\x00\x00')
 
     monkeypatch.setattr(requests, 'head', req)
@@ -54,7 +63,8 @@ def offline_requests(monkeypatch):
 @pytest.fixture
 def dummy_source():
     """Create a basic MangaSource."""
-    return ms.MangaSource('test source', 'http://www.source.com/', '_')
+    return mangasource.MangaSource(
+        'test source', 'http://www.source.com/', '_')
 
 
 @pytest.fixture(params=[400, 403, 404, 500, 'error'])
@@ -88,3 +98,47 @@ def conn_response(request):
 def dummy_soup():
     """Create a BeautifulSoup from offline_requests text."""
     return BeautifulSoup(TEST_PAGE, 'html.parser')
+
+
+@pytest.fixture
+def empty_cache():
+    """Create an empty series cache."""
+    return seriescache.SeriesCache('empty test')
+
+
+@pytest.fixture
+def filled_cache(dummy_source):
+    """Create an filled series cache.
+
+    Has data for the following:
+        dummy_source -> Chp 1 only, last updated now
+        MangaSource: -> Chps 4 and 5, last updated 2 hours ago
+            name: source2
+            url: http://www.another.com/
+            slug: -
+        MangaSource: -> No chapters, last updated 12 hours ago, custom url
+            name: old-source
+            url: http://old.net/
+            slug:
+    """
+    now = datetime.utcnow().timestamp()
+
+    cache = seriescache.SeriesCache('test series')
+    cache._index_pages = {
+        repr(dummy_source): '<a href="/test_series/1">Chapter link</a>',
+        '<MangaSource: source2 @ http://www.another.com/>': '''
+            <a href="/test-series/5">Chapter link</a>
+            <a href="/test-series/4">Chapter link</a>''',
+        '<MangaSource: old-source @ http://old.net/>': '<p>No chapters</p>'
+    }
+    cache._custom_urls = {
+        '<MangaSource: old-source @ http://old.net/>':
+            'https://old.chap.net/TestSeries'
+    }
+    cache._last_updated = {
+        repr(dummy_source): now,
+        '<MangaSource: source2 @ http://www.another.com/>': now - 7200,
+        '<MangaSource: old-source @ http://old.net/>': now - 43200
+    }
+
+    return cache
