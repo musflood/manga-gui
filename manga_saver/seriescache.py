@@ -79,11 +79,21 @@ class SeriesCache(object):
         """
         if not isinstance(source, MangaSource):
             raise TypeError('source must be a MangaSource.')
-        if index_url and type(index_url) is not str:
+        if index_url is not None and type(index_url) is not str:
             raise TypeError('URL must be a string.')
+        if type(update_interval) is not int:
+            raise TypeError('Update interval must be an integer.')
+        if update_interval < 0:
+            raise ValueError('Update interval cannot be negative.')
 
         now = datetime.utcnow().timestamp()
-        if now - self._last_updated[repr(source)] > update_interval:
+
+        last_update = self._last_updated[repr(source)] if source in self else 0
+        is_old_cache = now - last_update > update_interval
+
+        is_new_url = index_url and self._custom_urls[repr(source)] != index_url
+
+        if is_new_url or is_old_cache:
             self.update_index(source, index_url)
 
         return self._index_pages[repr(source)]

@@ -132,6 +132,8 @@ def filled_cache(dummy_source):
         '<MangaSource: old-source @ http://old.net/>': '<p>No chapters</p>'
     }
     cache._custom_urls = {
+        '<MangaSource: source2 @ http://www.another.com/>':
+            'http://another.net/TestSeries',
         '<MangaSource: old-source @ http://old.net/>':
             'https://old.chap.net/TestSeries'
     }

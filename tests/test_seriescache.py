@@ -1,6 +1,7 @@
 """Tests for the seriescache module."""
 import pytest
 
+from .conftest import requests_patch
 from .context import seriescache as sc
 
 
@@ -165,3 +166,114 @@ def test_update_index_replaces_cached_url_if_custom_url_given(filled_cache):
     filled_cache.update_index(source, 'https://new.net/TestSeries')
     url = filled_cache._custom_urls[repr(source)]
     assert url == 'https://new.net/TestSeries'
+
+
+def test_get_index_raises_error_for_bad_source(empty_cache):
+    """Test that get_index raises a TypeError for non MangaSource source."""
+    with pytest.raises(TypeError):
+        empty_cache.get_index('http://t.co/')
+
+
+@pytest.mark.parametrize('value', [500, [], 2.1, {}])
+def test_get_index_raises_error_for_non_string_index_url(value):
+    """Test that get_index raises a TypeError for non string url."""
+    from .conftest import empty_cache, dummy_source
+    with pytest.raises(TypeError):
+        empty_cache().get_index(dummy_source(), value)
+
+
+@pytest.mark.parametrize('value', ['500', [], 2.1, {}])
+def test_get_index_raises_error_for_non_integer_update_interval(value):
+    """Test that get_index raises a TypeError for non integer interval."""
+    from .conftest import empty_cache, dummy_source
+    with pytest.raises(TypeError):
+        empty_cache().get_index(dummy_source(), update_interval=value)
+
+
+def test_get_index_raises_error_for_negative_update_interval(empty_cache,
+                                                             dummy_source):
+    """Test that get_index raises a ValueError for negative interval."""
+    with pytest.raises(ValueError):
+        empty_cache.get_index(dummy_source, update_interval=-5)
+
+
+def test_get_index_for_source_not_in_cache_adds_to_cache(empty_cache,
+                                                         dummy_source):
+    """Test that get_index for source not in cache adds it."""
+    assert dummy_source not in empty_cache
+    empty_cache.get_index(dummy_source)
+    assert dummy_source in empty_cache
+
+
+def test_get_index_for_source_not_in_cache_returns_new_index(empty_cache,
+                                                             dummy_source,
+                                                             monkeypatch):
+    """Test that get_index for source not in cache gets its index page."""
+    import requests
+    index = '<p>chap</p>'
+    monkeypatch.setattr(requests, 'get', requests_patch(text=index))
+    result = empty_cache.get_index(dummy_source)
+    assert result == index
+
+
+def test_get_index_recent_source_returns_cached_index(filled_cache,
+                                                      dummy_source):
+    """Test that get_index for recent source returns cached index."""
+    index = filled_cache._index_pages[repr(dummy_source)]
+    result = filled_cache.get_index(dummy_source)
+    assert index == result
+
+
+def test_get_index_recent_uses_cached_index_for_same_custom_url(filled_cache):
+    """Test that get_index for recent source uses cache for same custom url."""
+    from .context import mangasource
+    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    old_index = filled_cache._index_pages[repr(source)]
+    result = filled_cache.get_index(source, 'http://another.net/TestSeries')
+    assert result == old_index
+
+
+def test_get_index_recent_gets_new_index_for_new_custom_url(filled_cache):
+    """Test that get_index for recent source gets new index for custom url."""
+    from .context import mangasource
+    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    old_index = filled_cache._index_pages[repr(source)]
+    result = filled_cache.get_index(source, 'http://another.net/tEsTsErIeS')
+    assert result != old_index
+
+
+def test_get_index_recent_given_update_interval_treats_as_old(filled_cache):
+    """Test that get_index for recent outside interval treats as old source."""
+    from .context import mangasource
+    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    old_index = filled_cache._index_pages[repr(source)]
+    result = filled_cache.get_index(source, update_interval=5000)
+    assert result != old_index
+
+
+def test_get_index_old_source_updates_cached_index(filled_cache):
+    """Test that get_index for old source updates cached index."""
+    from .context import mangasource
+    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    old_index = filled_cache._index_pages[repr(source)]
+    result = filled_cache.get_index(source)
+    assert result != old_index
+
+
+def test_get_index_old_source_updates_timstamp(filled_cache):
+    """Test that get_index for old source updates the timestamp."""
+    from .context import mangasource
+    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    old_timestamp = filled_cache._last_updated[repr(source)]
+    filled_cache.get_index(source)
+    new_timestamp = filled_cache._last_updated[repr(source)]
+    assert old_timestamp < new_timestamp
+
+
+def test_get_index_old_source_updates_url_when_given(filled_cache):
+    """Test that get_index for old source updates the custom url."""
+    from .context import mangasource
+    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    assert filled_cache._custom_urls[repr(source)] != 'http://o.co/testseries'
+    filled_cache.get_index(source, 'http://o.co/testseries')
+    assert filled_cache._custom_urls[repr(source)] == 'http://o.co/testseries'

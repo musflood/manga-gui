@@ -9,7 +9,7 @@ install:
 
 # commands to run tests
 script:
-  - pytest --cov manga_saver
+  - pytest --cov manga_saver --cov-branch
 
 after_success:
   - coveralls
