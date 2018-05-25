@@ -17,11 +17,15 @@ class MangaSource(object):
             own webpage or not.
         pg_img_attrs: Additional attributes on the HTML tag that contains
             the page image.
+        index_tag: The HTML tag that contains the table of contents on
+            the index page for a series.
+        index_attrs: Additional attributes on the HTML tag that contains
+            the table of contents on the index page for a series.
 
     """
 
     def __init__(self, name, root_url, slug_filler, is_multipage=True,
-                 pg_img_attrs=None):
+                 pg_img_attrs=None, index_tag='table', index_attrs=None):
         """Set up details for a new source.
 
         Args:
@@ -32,20 +36,29 @@ class MangaSource(object):
             is_multipage: (optional) Whether the source has each page image
                 on its own webpage or not.
             pg_img_attrs: (optional) Additional attributes on the HTML tag
-                that contains the page image. Must be provided in a dict
+                that contains the page image. Must be provided in a dict.
+            index_tag: (optional) The HTML tag that contains the table of
+                contents on the index page for a series.
+            index_attrs: (optional) Additional attributes on the HTML tag
+                that contains the table of contents on the index page
+                for a series. Must be provided in a dict.
 
         Raises:
             TypeError: For non-string arguments.
             ValueError: For empty name or root_url and for invalid root_url.
 
         """
-        if not all(type(arg) is str for arg in (name, root_url, slug_filler)):
+        if not all(type(arg) is str for arg in
+                   (name, root_url, slug_filler, index_tag)):
             raise TypeError('Must construct a MangaSource with strings.')
 
-        if not all((name, root_url)):
+        if not all((name, root_url, index_tag)):
             raise ValueError('Cannot use empty strings for a MangaSource.')
 
         if pg_img_attrs is not None and type(pg_img_attrs) is not dict:
+            raise TypeError('Tag attributes must be given as a dict.')
+
+        if index_attrs is not None and type(index_attrs) is not dict:
             raise TypeError('Tag attributes must be given as a dict.')
 
         # Fundamental source identifiers
@@ -70,6 +83,9 @@ class MangaSource(object):
         self.is_multipage = is_multipage
 
         self.pg_img_attrs = pg_img_attrs
+
+        self.index_tag = index_tag
+        self.index_attrs = index_attrs
 
     def __repr__(self):
         """Display the name and url for the source."""

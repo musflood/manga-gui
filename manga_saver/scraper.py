@@ -109,11 +109,10 @@ class Scraper(object):
         return data, ext, next_page, html
 
     @classmethod
-    def _generate_multipage_chapter(cls, chapter, url, source):
+    def _generate_multipage_chapter(cls, url, source):
         """Generate all the image data for the pages of a multipage source.
 
         Args:
-            chapter: The number of the chapter being generated.
             url: The link to the first page of the chapter.
             source: The MangaSource this link came from.
 
@@ -125,15 +124,21 @@ class Scraper(object):
             ValueError: For empty chapter or url.
 
         """
-        if not all(type(arg) is str for arg in (chapter, url)):
-            raise TypeError('Chapter and URL must be strings.')
+        if type(url) is not str:
+            raise TypeError('URL must be a string.')
         if not isinstance(source, MangaSource):
             raise TypeError('Given source must be a MangaSource.')
-        if not all((chapter, url)):
-            raise ValueError('Cannot use empty strings for chapter or URL.')
+        if not url:
+            raise ValueError('Cannot use an empty strings for URL.')
 
         def gen(url):
-            while chapter in url:
+            base_url, end = url.rsplit('/', 1)
+
+            dashed_number = re.match(r'^\d*(-|_)\d*$', end)
+            if dashed_number:
+                base_url += end.split(dashed_number.groups()[0])
+
+            while base_url in url:
                 try:
                     data, ext, url, _ = cls._get_page(url, source)
                 except ValueError:
@@ -142,11 +147,10 @@ class Scraper(object):
         return gen(url)
 
     @classmethod
-    def _generate_singlepage_chapter(cls, chapter, url, source):
+    def _generate_singlepage_chapter(cls, url, source):
         """Generate all the image data for the pages of a singlepage source.
 
         Args:
-            chapter: The number of the chapter being generated.
             url: The link to the chapter page with page images.
             source: The MangaSource this link came from.
 
@@ -158,12 +162,12 @@ class Scraper(object):
             ValueError: For empty chapter or url.
 
         """
-        if not all(type(arg) is str for arg in (chapter, url)):
-            raise TypeError('Chapter and URL must be strings.')
+        if type(url) is not str:
+            raise TypeError('URL must be a string.')
         if not isinstance(source, MangaSource):
             raise TypeError('Given source must be a MangaSource.')
-        if not all((chapter, url)):
-            raise ValueError('Cannot use empty strings for chapter or URL.')
+        if not url:
+            raise ValueError('Cannot use an empty strings for URL.')
 
         def gen():
             data, ext, _, html = cls._get_page(url, source)
@@ -174,59 +178,89 @@ class Scraper(object):
         return gen()
 
     @classmethod
-    def _get_chapter_link(cls, series, chapter, source, index_url=None):
-        """Get the link to the first page of the chapter from the index.
+    def _make_chapter_finder(cls, series_title):
+        """Make a function that finds the chapter number in an index entry."""
+        if type(series_title) is not str:
+            raise TypeError('Series title must be a string.')
+
+        number_re = re.compile(r'\d+\.\d+|\d+')
+        chapter_re = re.compile(r'\bch.*?\b(\d+\.\d+|\d+)')
+
+        def chapter_number(text):
+            text = text.lower()
+            text = text.replace(series_title.lower(), '', 1)
+
+            numbers = number_re.findall(text)
+            if not numbers:
+                raise ValueError('Index entry has no chapter number.')
+
+            if len(numbers) == 1:
+                return numbers[0].lstrip('0')
+
+            ch_numbers = chapter_re.findall(text)
+            if ch_numbers:
+                return ch_numbers[0].lstrip('0')
+
+            return numbers[0].lstrip('0')
+
+        return chapter_number
+
+    @classmethod
+    def chapter_list(cls, series, source, index_url=None):
+        """Get a dict of chapter numbers and links to the first, or only page.
 
         Args:
             series: The SeriesCache of the series for the chapter.
-            chapter: The chapter of the series, as a string.
             source: The MangaSource to get the chapter from.
             index_url: (optional) A custom URL for the index of the series.
 
         Returns:
-            The link to the first page of the chapter.
+            A dictionary of the chapter number as a string and the link.
 
         Raises:
             TypeError: For improperly typed arguments.
-            ValueError: For empty chapter or invalid chapter.
+            ValueError: For a source that is missing the index element.
 
         """
         if not isinstance(series, SeriesCache):
             raise TypeError('Given series must be a SeriesCache.')
-        if type(chapter) is not str:
-            raise TypeError('Chapter must be a string.')
         if not isinstance(source, MangaSource):
             raise TypeError('Given source must be a MangaSource.')
         if index_url and type(index_url) is not str:
             raise TypeError('URL must be a string.')
-        if not chapter:
-            raise ValueError('Cannot use empty string for chapter.')
 
         index_html = series.get_index(source, index_url)
         index_html = BeautifulSoup(index_html, 'html.parser')
+        index_html = index_html.find(source.index_tag,
+                                     attrs=source.index_attrs)
 
-        index_url = index_url.rstrip('/')
-        slug = index_url.rsplit('/', 1)[1]
+        if not index_html:
+            raise ValueError('No chapter list found in source.')
 
-        chap_re = f'{slug}/{chapter}'
-        chap_link = index_html.find('a', href=re.compile(f'{chap_re}$'))
-        if not chap_link:
-            chap_link = index_html.find('a', href=re.compile(f'{chap_re}/'))
+        chapter_re = re.compile(r'(\D|\b)\d+(\D|\b)')
 
-        if not chap_link:
-            raise ValueError(f'Chapter {chapter} is not available.')
+        def chapter_anchor_tag(tag):
+            if tag.name != 'a':
+                return False
 
-        return chap_link['href']
+            contents = ''.join(s for s in tag.stripped_strings)
+            has_correct_contents = chapter_re.search(contents)
+
+            return has_correct_contents
+
+        chap_links = index_html.findAll(chapter_anchor_tag)
+
+        find_ch = cls._make_chapter_finder(series.title)
+
+        return {find_ch(tag.text): tag['href'] for tag in chap_links}
 
     @classmethod
-    def chapter_pages(cls, series, chapter, source, index_url=None):
+    def chapter_pages(cls, chapter_url, source):
         """Generate the pages for a chapter of the series from a source.
 
         Args:
-            series: The SeriesCache of the series for the chapter.
-            chapter: The chapter of the series, as a string.
+            chapter_url: The URL of the first or only page of the chapter.
             source: The MangaSource to get the chapter from.
-            index_url: (optional) A custom URL for the index of the series.
 
         Yields:
             A tuple of the page image data and file extension.
@@ -236,23 +270,17 @@ class Scraper(object):
             ValueError: For empty chapter.
 
         """
-        if not isinstance(series, SeriesCache):
-            raise TypeError('Given series must be a SeriesCache.')
-        if type(chapter) is not str:
-            raise TypeError('Chapter must be a string.')
+        if type(chapter_url) is not str:
+            raise TypeError('Chapter URL must be a string.')
         if not isinstance(source, MangaSource):
             raise TypeError('Given source must be a MangaSource.')
-        if index_url and type(index_url) is not str:
-            raise TypeError('URL must be a string.')
-        if not chapter:
+        if not chapter_url:
             raise ValueError('Cannot use empty string for chapter.')
 
-        url = cls._get_chapter_link(series, chapter, source, index_url)
-
         if source.is_multipage:
-            pages = cls._generate_multipage_chapter(chapter, url, source)
+            pages = cls._generate_multipage_chapter(chapter_url, source)
         else:
-            pages = cls._generate_singlepage_chapter(chapter, url, source)
+            pages = cls._generate_singlepage_chapter(chapter_url, source)
 
         def gen(pages):
             for page in pages:

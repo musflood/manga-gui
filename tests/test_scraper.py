@@ -132,48 +132,31 @@ def test_get_page_gets_next_url_with_relative_path(dummy_source, monkeypatch):
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}])
-def test_generate_multipage_chapter_raises_error_for_non_string_chapter(value):
-    """Test _generate_multipage_chapter raises a TypeError for bad chapter."""
-    from .context import mangasource
-    source = mangasource.MangaSource('test', 'www.test.com', '_')
-    with pytest.raises(TypeError):
-        scr.Scraper._generate_multipage_chapter(value, 'http://t.com/', source)
-
-
-@pytest.mark.parametrize('value', [500, [], 2.1, {}])
 def test_generate_multipage_chapter_raises_error_for_non_string_url(value):
     """Test _generate_multipage_chapter raises a TypeError for bad url."""
     from .context import mangasource
     source = mangasource.MangaSource('test', 'www.test.com', '_')
     with pytest.raises(TypeError):
-        scr.Scraper._generate_multipage_chapter('1', value, source)
+        scr.Scraper._generate_multipage_chapter(value, source)
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}, 'www.test.com'])
 def test_generate_multipage_chapter_raises_error_for_bad_mangasource(value):
     """Test _generate_multipage_chapter raises a TypeError for bad source."""
     with pytest.raises(TypeError):
-        scr.Scraper._generate_multipage_chapter('1', 'http://t.com/', value)
-
-
-def test_generate_multipage_chapter_raises_error_for_empty_chap(dummy_source):
-    """Test _generate_multipage_chapter raises ValueError for empty chap."""
-    with pytest.raises(ValueError):
-        scr.Scraper._generate_multipage_chapter(
-            '', 'http://t.com/', dummy_source)
+        scr.Scraper._generate_multipage_chapter('http://t.com/', value)
 
 
 def test_generate_multipage_chapter_raises_error_for_empty_url(dummy_source):
     """Test _generate_multipage_chapter raises ValueError for empty url."""
     with pytest.raises(ValueError):
-        scr.Scraper._generate_multipage_chapter(
-            '1', '', dummy_source)
+        scr.Scraper._generate_multipage_chapter('', dummy_source)
 
 
 def test_generate_multipage_chapter_returns_generator(dummy_source):
     """Test _generate_multipage_chapter returns a generator of tuples."""
     pages = scr.Scraper._generate_multipage_chapter(
-            '1', 'http://t.com/001/page/1', dummy_source)
+        'http://t.com/001/page/1', dummy_source)
     result = next(pages)
     assert type(result) is tuple
 
@@ -181,7 +164,7 @@ def test_generate_multipage_chapter_returns_generator(dummy_source):
 def test_generate_multipage_chapter_yields_image_and_extension(dummy_source):
     """Test _generate_multipage_chapter yeilds image data and extention."""
     pages = scr.Scraper._generate_multipage_chapter(
-            '1', 'http://t.com/001/page/1', dummy_source)
+        'http://t.com/001/page/1', dummy_source)
     img, ext = next(pages)
     assert img == b'\x00\x00\x00\x00\x00\x00'
     assert ext == 'png'
@@ -211,7 +194,7 @@ def test_generate_multipage_chapter_yields_all_images_in_chapter(dummy_source,
     monkeypatch.setattr(requests, 'get', req)
 
     pages = scr.Scraper._generate_multipage_chapter(
-            '2', 'http://t.com/2/page/1', dummy_source)
+        'http://t.com/2/page/1', dummy_source)
     imgs = [pg for pg in pages]
     assert len(imgs) == 4
     assert imgs[0] != imgs[1] != imgs[2] != imgs[3]
@@ -244,19 +227,9 @@ def test_generate_multipage_chapter_works_for_last_chapter(dummy_source,
     monkeypatch.setattr(requests, 'get', req)
 
     pages = scr.Scraper._generate_multipage_chapter(
-            '2', 'http://t.com/2/page/1', dummy_source)
+        'http://t.com/2/page/1', dummy_source)
     imgs = [pg for pg in pages]
     assert len(imgs) == 4
-
-
-@pytest.mark.parametrize('val', [500, [], 2.1, {}])
-def test_generate_singlepage_chapter_raises_error_for_non_string_chapter(val):
-    """Test _generate_singlepage_chapter raises a TypeError for bad chapter."""
-    from .context import mangasource
-    source = mangasource.MangaSource('test', 'www.test.com', '_')
-    with pytest.raises(TypeError):
-        scr.Scraper._generate_singlepage_chapter(
-            val, 'http://t.com/', source)
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}])
@@ -265,34 +238,26 @@ def test_generate_singlepage_chapter_raises_error_for_non_string_url(value):
     from .context import mangasource
     source = mangasource.MangaSource('test', 'www.test.com', '_')
     with pytest.raises(TypeError):
-        scr.Scraper._generate_singlepage_chapter('1', value, source)
+        scr.Scraper._generate_singlepage_chapter(value, source)
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}, 'www.test.com'])
 def test_generate_singlepage_chapter_raises_error_for_bad_mangasource(value):
     """Test _generate_singlepage_chapter raises a TypeError for bad source."""
     with pytest.raises(TypeError):
-        scr.Scraper._generate_singlepage_chapter('1', 'http://t.com/', value)
-
-
-def test_generate_singlepage_chapter_raises_error_for_empty_chap(dummy_source):
-    """Test _generate_singlepage_chapter raises ValueError for empty chap."""
-    with pytest.raises(ValueError):
-        scr.Scraper._generate_singlepage_chapter(
-            '', 'http://t.com/', dummy_source)
+        scr.Scraper._generate_singlepage_chapter('http://t.com/', value)
 
 
 def test_generate_singlepage_chapter_raises_error_for_empty_url(dummy_source):
     """Test _generate_singlepage_chapter raises ValueError for empty url."""
     with pytest.raises(ValueError):
-        scr.Scraper._generate_singlepage_chapter(
-            '1', '', dummy_source)
+        scr.Scraper._generate_singlepage_chapter('', dummy_source)
 
 
 def test_generate_singlepage_chapter_returns_generator(dummy_source):
     """Test _generate_singlepage_chapter returns a generator of tuples."""
     pages = scr.Scraper._generate_singlepage_chapter(
-            '1', 'http://t.com/001/page/1', dummy_source)
+        'http://t.com/001/page/1', dummy_source)
     result = next(pages)
     assert type(result) is tuple
 
@@ -300,7 +265,7 @@ def test_generate_singlepage_chapter_returns_generator(dummy_source):
 def test_generate_singlepage_chapter_yields_image_and_extension(dummy_source):
     """Test _generate_singlepage_chapter yeilds image data and extention."""
     pages = scr.Scraper._generate_singlepage_chapter(
-            '1', 'http://t.com/001/page/1', dummy_source)
+        'http://t.com/001/page/1', dummy_source)
     img, ext = next(pages)
     assert img == b'\x00\x00\x00\x00\x00\x00'
     assert ext == 'png'
@@ -328,7 +293,120 @@ def test_generate_singlepage_chapter_yields_all_images_in_chapter(dummy_source,
     monkeypatch.setattr(requests, 'get', req)
 
     pages = scr.Scraper._generate_singlepage_chapter(
-            '2', 'http://t.com/1', dummy_source)
+        'http://t.com/1', dummy_source)
     imgs = [pg for pg in pages]
     assert len(imgs) == 4
     assert imgs[0] != imgs[1] != imgs[2] != imgs[3]
+
+
+@pytest.mark.parametrize('value', [500, [], 2.1, {}])
+def test_make_chapter_finder_raises_error_for_non_string_title(value):
+    """Test _make_chapter_finder raises a TypeError for bad title."""
+    with pytest.raises(TypeError):
+        scr.Scraper._make_chapter_finder(value)
+
+
+def test_make_chapter_finder_returns_a_function():
+    """Test _make_chapter_finder returns a function."""
+    result = scr.Scraper._make_chapter_finder('')
+    assert callable(result)
+
+
+def test_chapter_finder_raises_error_for_missing_chapter_number():
+    """Test that chapter finder raises a ValueError for text missing number."""
+    find = scr.Scraper._make_chapter_finder('')
+    with pytest.raises(ValueError):
+        find('nothing')
+
+
+chapter_entries = [
+    ('{} 77 Vol 08 The Wired Red Wild Card Part 1', '77'),
+    ('Vol.10 chapter 85 : The wired red wild card pt.9', '85'),
+    ('97 - The Wired Red Wild Card PT.21', '97'),
+    ('{} 55.1', '55.1'),
+    ('Chaper 20', '20'),
+    ('Vol.10 Ch.43', '43'),
+    ('CH.004', '4')
+]
+
+
+@pytest.mark.parametrize('title', ['title', '300', 'NO.7'])
+@pytest.mark.parametrize('text, num', chapter_entries)
+def test_chapter_finder_finds_the_chapter_number(title, text, num):
+    """Test that chapter finder gets the correct chapter number."""
+    text = text.format(title)
+    find = scr.Scraper._make_chapter_finder(title)
+    assert find(text) == num
+
+
+@pytest.mark.parametrize('value', [500, [], 2.1, {}])
+def test_chapter_list_raises_error_for_non_string_url(value):
+    """Test chapter_list raises a TypeError for bad url."""
+    from .context import mangasource, seriescache
+    source = mangasource.MangaSource('test', 'www.test.com', '_')
+    cache = seriescache.SeriesCache('title')
+    with pytest.raises(TypeError):
+        scr.Scraper.chapter_list(cache, source, value)
+
+
+@pytest.mark.parametrize('value', [500, [], 2.1, {}, 'www.test.com'])
+def test_chapter_list_raises_error_for_bad_mangasource(value):
+    """Test chapter_list raises a TypeError for bad source."""
+    from .context import seriescache
+    cache = seriescache.SeriesCache('title')
+    with pytest.raises(TypeError):
+        scr.Scraper.chapter_list(cache, value)
+
+
+@pytest.mark.parametrize('value', [500, [], 2.1, {}, 'title'])
+def test_chapter_list_raises_error_for_bad_seriescache(value):
+    """Test chapter_list raises a TypeError for bad source."""
+    from .context import mangasource
+    source = mangasource.MangaSource('test', 'www.test.com', '_')
+    with pytest.raises(TypeError):
+        scr.Scraper.chapter_list(value, source)
+
+
+def test_chapter_list_raises_error_when_index_not_found(dummy_source,
+                                                        filled_cache):
+    """Test chapter_list raises ValueError for no index found in source."""
+    with pytest.raises(ValueError):
+        scr.Scraper.chapter_list(filled_cache, dummy_source)
+
+
+def test_chapter_list_returns_empty_dict_for_empty_index(dummy_source,
+                                                         empty_cache):
+    """Test chapter_list gets empty dict for index with no chapters."""
+    from datetime import datetime
+    now = datetime.utcnow().timestamp()
+    empty_cache._index_pages = {
+        repr(dummy_source): '<table><a href="/"><No chaps</a></table>'
+    }
+    empty_cache._last_updated = {repr(dummy_source): now}
+
+    chapters = scr.Scraper.chapter_list(empty_cache, dummy_source)
+    assert len(chapters) == 0
+
+
+def test_chapter_list_finds_all_chapters(various_indexes):
+    """Test chapter_list retrieves all chapters from index page."""
+    chapters = scr.Scraper.chapter_list(*various_indexes)
+    assert len(chapters) == 10
+
+
+def test_chapter_list_gets_chapter_numbers_for_all_entries(various_indexes):
+    """Test chapter_list gets the chapter number from the index entry."""
+    chapters = scr.Scraper.chapter_list(*various_indexes)
+    assert all([chap.replace('.', '').isdecimal() for chap in chapters])
+
+
+def test_chapter_list_gets_chapter_number_without_html(various_indexes):
+    """Test chapter_list gets the chapter number without any html."""
+    chapters = scr.Scraper.chapter_list(*various_indexes)
+    assert all(['<' not in title for title in chapters])
+
+
+def test_chapter_list_gets_url_for_each_chapter(various_indexes):
+    """Test chapter_list gets the url for each chapter."""
+    chapters = scr.Scraper.chapter_list(*various_indexes)
+    assert all([url.startswith('/') for url in chapters.values()])
