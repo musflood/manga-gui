@@ -211,7 +211,7 @@ def test_generate_multipage_chapter_works_for_last_chapter(dummy_source,
             yield f'''<a href="/{ch}/page/{pg % ch_len + 1}">
             <img src="https://file.co/img.png">
             </a>'''
-        yield f'''<a href="/{ch}/end">
+        yield f'''<a href="/{ch}/page/end">
         <img src="https://file.co/img.png">
         </a>'''
         yield ''
@@ -228,6 +228,30 @@ def test_generate_multipage_chapter_works_for_last_chapter(dummy_source,
 
     pages = scr.Scraper._generate_multipage_chapter(
         'http://t.com/2/page/1', dummy_source)
+    imgs = [pg for pg in pages]
+    assert len(imgs) == 4
+
+
+def test_generate_multipage_chapter_works_dashed_url(dummy_source,
+                                                     monkeypatch):
+    """Test _generate_multipage_chapter still works for dashed chapter url."""
+    import requests
+
+    def page_txt(ch_len):
+        for n in range(2, ch_len * 2 + 1):
+            pg = n // 2
+            yield f'''<a href="https://foo.co/chap/437217-{pg % ch_len + 1}">
+            <img src="https://file.co/img.png">
+            </a>'''
+        yield f'''<a href="https://foo.co/chap/437416/">
+        <img src="https://file.co/img.png">
+        </a>'''
+
+    req = requests_patch(text=page_txt(4), content='')
+    monkeypatch.setattr(requests, 'get', req)
+
+    pages = scr.Scraper._generate_multipage_chapter(
+        'https://foo.co/chap/437217-1', dummy_source)
     imgs = [pg for pg in pages]
     assert len(imgs) == 4
 
@@ -411,3 +435,82 @@ def test_chapter_list_gets_url_for_each_chapter(various_indexes):
     """Test chapter_list gets the url for each chapter."""
     chapters = scr.Scraper.chapter_list(*various_indexes)
     assert all([url.startswith('/') for url in chapters.values()])
+
+
+@pytest.mark.parametrize('value', [500, [], 2.1, {}])
+def test_chapter_pages_raises_error_for_non_string_url(value):
+    """Test chapter_pages raises a TypeError for bad url."""
+    from .context import mangasource
+    source = mangasource.MangaSource('test', 'www.test.com', '_')
+    with pytest.raises(TypeError):
+        scr.Scraper.chapter_pages(value, source)
+
+
+@pytest.mark.parametrize('value', [500, [], 2.1, {}, 'www.test.com'])
+def test_chapter_pages_raises_error_for_bad_mangasource(value):
+    """Test chapter_pages raises a TypeError for bad source."""
+    with pytest.raises(TypeError):
+        scr.Scraper.chapter_pages('http://t.com/', value)
+
+
+def test_chapter_pages_raises_error_for_empty_url(dummy_source):
+    """Test chapter_pages raises ValueError for empty url."""
+    with pytest.raises(ValueError):
+        scr.Scraper.chapter_pages('', dummy_source)
+
+
+def test_chapter_pages_yields_all_images_in_multipage_chapter(dummy_source,
+                                                              monkeypatch):
+    """Test chapter_pages yeilds all images in multipage source."""
+    import requests
+
+    def page_txt(ch_len):
+        n = 2
+        while True:
+            pg = n // 2
+            yield f'''<a href="/{pg // ch_len + 2}/page/{pg % ch_len + 1}">
+            <img src="https://file.co/img.png">
+            </a>'''
+            n += 1
+
+    def content():
+        n = 1
+        while True:
+            yield b'\x00' * (n // 2)
+            n += 1
+
+    req = requests_patch(text=page_txt(4), content=content())
+    monkeypatch.setattr(requests, 'get', req)
+
+    pages = scr.Scraper.chapter_pages('http://t.com/2/page/1', dummy_source)
+    imgs = [pg for pg in pages]
+    assert len(imgs) == 4
+    assert imgs[0] != imgs[1] != imgs[2] != imgs[3]
+
+
+def test_chapter_pages_yields_all_images_in_singlepage_chapter(dummy_source,
+                                                               monkeypatch):
+    """Test chapter_pages yeilds all images in singlepage source."""
+    import requests
+    dummy_source.is_multipage = False
+
+    page_txt = '''
+    <img src="http://files.co/test.png" id="1">
+    <img src="http://files.co/test.png" id="2">
+    <img src="http://files.co/test.png" id="3">
+    <img src="http://files.co/test.png" id="4">
+    '''
+
+    def content():
+        n = 0
+        while True:
+            yield b'\x00' * n
+            n += 1
+
+    req = requests_patch(text=page_txt, content=content())
+    monkeypatch.setattr(requests, 'get', req)
+
+    pages = scr.Scraper.chapter_pages('http://t.com/1', dummy_source)
+    imgs = [pg for pg in pages]
+    assert len(imgs) == 4
+    assert imgs[0] != imgs[1] != imgs[2] != imgs[3]

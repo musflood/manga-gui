@@ -32,6 +32,20 @@ def test_constructor_raises_type_error_for_non_dict_pg_img_attrs(val):
         ms.MangaSource('test', 'http://www.source.com/', '-', pg_img_attrs=val)
 
 
+@pytest.mark.parametrize('value', [500, [], 2.1, {}])
+def test_constructor_raises_type_error_for_non_string_index_tag(value):
+    """Test that constructor raises a TypeError for non-string."""
+    with pytest.raises(TypeError):
+        ms.MangaSource('test', 'http://www.source.com/', '-', index_tag=value)
+
+
+@pytest.mark.parametrize('val', [500, [], 2.1, 'key'])
+def test_constructor_raises_type_error_for_non_dict_index_attrs(val):
+    """Test that constructor raises a TypeError for non-dict."""
+    with pytest.raises(TypeError):
+        ms.MangaSource('test', 'http://www.source.com/', '-', index_attrs=val)
+
+
 def test_constructor_raises_value_error_for_empty_name():
     """Test that ocnstructor raises TypeError for empty name."""
     with pytest.raises(ValueError):

@@ -147,11 +147,12 @@ class Scraper(object):
             raise ValueError('Cannot use an empty strings for URL.')
 
         def gen(url):
-            base_url, end = url.rsplit('/', 1)
+            base_url, end = url.rstrip('/').rsplit('/', 1)
 
             dashed_number = re.match(r'^\d*(-|_)\d*$', end)
             if dashed_number:
-                base_url += end.split(dashed_number.groups()[0])
+                base_end = end.split(dashed_number.groups()[0])[0]
+                base_url += f'/{base_end}'
 
             while base_url in url:
                 try:

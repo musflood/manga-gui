@@ -4,7 +4,7 @@
 
 **Author**: Megan Flood
 
-**Version**: 0.1.0
+**Version**: 0.2.0
 
 ## Overview
 Download the chapters of your favorite manga from various sources online to your computer for offline reading.
@@ -15,6 +15,7 @@ Written in [Python](https://www.python.org/), with [pytest](https://docs.pytest.
 ## Change Log
 | Date | &emsp;
 | :--- | ---
+|**5-25-2018 12:26am** | Completed first iteration of Scraper class and SeriesCache model.
 |**4-21-2018 11:17pm** | Completed first iteration of MangaSource model.
 |**4-21-2018 7:30pm** | Setup testing and automated testing.
 |**4-20-2018 10:31am** | Initial file setup.
