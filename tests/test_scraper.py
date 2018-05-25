@@ -330,7 +330,8 @@ chapter_entries = [
 ]
 
 
-@pytest.mark.parametrize('title', ['title', '300', 'NO.7'])
+@pytest.mark.parametrize('title',
+                         ['title', '300', 'NO.7', 'The Longest 4Ever'])
 @pytest.mark.parametrize('text, num', chapter_entries)
 def test_chapter_finder_finds_the_chapter_number(title, text, num):
     """Test that chapter finder gets the correct chapter number."""
