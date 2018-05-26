@@ -38,8 +38,8 @@ class Scraper(object):
 
         index_html = series.get_index(source, index_url)
         index_html = BeautifulSoup(index_html, 'html.parser')
-        index_html = index_html.find(source.index_tag,
-                                     attrs=source.index_attrs)
+        index_html = index_html.find(
+            source.index_tag, attrs=source.index_attrs)
 
         if not index_html:
             raise ValueError('No chapter list found in source.')
@@ -58,8 +58,10 @@ class Scraper(object):
         chap_links = index_html.findAll(chapter_anchor_tag)
 
         find_ch = cls._make_chapter_finder(series.title)
+        root_url = source.index_url(series.title)
 
-        return {find_ch(tag.text): tag['href'] for tag in chap_links}
+        return {find_ch(tag.text): urllib.parse.urljoin(root_url, tag['href'])
+                for tag in chap_links}
 
     @classmethod
     def _make_chapter_finder(cls, series_title):

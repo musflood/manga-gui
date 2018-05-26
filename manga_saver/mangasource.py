@@ -82,10 +82,10 @@ class MangaSource(object):
         # Details for parsing page and chapter HTML
         self.is_multipage = is_multipage
 
-        self.pg_img_attrs = pg_img_attrs
+        self.pg_img_attrs = pg_img_attrs if pg_img_attrs else {}
 
         self.index_tag = index_tag
-        self.index_attrs = index_attrs
+        self.index_attrs = index_attrs if index_attrs else {}
 
     def __repr__(self):
         """Display the name and url for the source."""

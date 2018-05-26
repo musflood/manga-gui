@@ -434,7 +434,7 @@ def test_chapter_list_gets_chapter_number_without_html(various_indexes):
 def test_chapter_list_gets_url_for_each_chapter(various_indexes):
     """Test chapter_list gets the url for each chapter."""
     chapters = scr.Scraper.chapter_list(*various_indexes)
-    assert all([url.startswith('/') for url in chapters.values()])
+    assert all([url.startswith('http') for url in chapters.values()])
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}])
