@@ -116,7 +116,7 @@ def filled_cache(dummy_source):
             name: source2
             url: http://www.another.com/
             slug: -
-        MangaSource: -> No chapters, last updated 12 hours ago, custom url
+        MangaSource: -> No chapters, last updated 12 hours ago, custom url,
             name: old-source
             url: http://old.net/
             slug:
@@ -141,6 +141,14 @@ def filled_cache(dummy_source):
         repr(dummy_source): now,
         '<MangaSource: source2 @ http://www.another.com/>': now - 7200,
         '<MangaSource: old-source @ http://old.net/>': now - 43200
+    }
+    cache._chapter_lists = {
+        '<MangaSource: source2 @ http://www.another.com/>':
+            {
+                '5': 'http://another.net/test-series/5',
+                '4': 'http://another.net/test-series/4'
+            },
+        '<MangaSource: old-source @ http://old.net/>': {}
     }
 
     return cache

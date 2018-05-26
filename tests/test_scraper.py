@@ -422,7 +422,7 @@ def test_chapter_list_finds_all_chapters(various_indexes):
 def test_chapter_list_gets_chapter_numbers_for_all_entries(various_indexes):
     """Test chapter_list gets the chapter number from the index entry."""
     chapters = scr.Scraper.chapter_list(*various_indexes)
-    assert all([chap.replace('.', '').isdecimal() for chap in chapters])
+    assert all([chap.replace('.', '', 1).isdecimal() for chap in chapters])
 
 
 def test_chapter_list_gets_chapter_number_without_html(various_indexes):
