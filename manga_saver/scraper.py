@@ -36,6 +36,10 @@ class Scraper(object):
         if index_url and type(index_url) is not str:
             raise TypeError('URL must be a string.')
 
+        chapters = series.get_chapter_list(source)
+        if chapters is not None:
+            return chapters
+
         index_html = series.get_index(source, index_url)
         index_html = BeautifulSoup(index_html, 'html.parser')
         index_html = index_html.find(
@@ -60,8 +64,14 @@ class Scraper(object):
         find_ch = cls._make_chapter_finder(series.title)
         root_url = source.index_url(series.title)
 
-        return {find_ch(tag.text): urllib.parse.urljoin(root_url, tag['href'])
-                for tag in chap_links}
+        chapters = {
+            find_ch(tag.text): urllib.parse.urljoin(root_url, tag['href'])
+            for tag in chap_links
+        }
+
+        series.set_chapter_list(source, chapters)
+
+        return chapters
 
     @classmethod
     def _make_chapter_finder(cls, series_title):

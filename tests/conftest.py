@@ -126,9 +126,10 @@ def filled_cache(dummy_source):
     cache = seriescache.SeriesCache('test series')
     cache._index_pages = {
         repr(dummy_source): '<a href="/test_series/1">Chapter link</a>',
-        '<MangaSource: source2 @ http://www.another.com/>': '''
+        '<MangaSource: source2 @ http://www.another.com/>': '''<table>
             <a href="/test-series/5">Chapter link</a>
-            <a href="/test-series/4">Chapter link</a>''',
+            <a href="/test-series/4">Chapter link</a>
+            </table>''',
         '<MangaSource: old-source @ http://old.net/>': '<p>No chapters</p>'
     }
     cache._custom_urls = {

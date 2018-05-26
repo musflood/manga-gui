@@ -399,6 +399,45 @@ def test_chapter_list_raises_error_when_index_not_found(dummy_source,
         scr.Scraper.chapter_list(filled_cache, dummy_source)
 
 
+def test_chapter_list_uses_cached_list_if_available(filled_cache):
+    """Test chapter_list returns the cached chapter list when available."""
+    from .context import mangasource
+    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    chapters = filled_cache._chapter_lists[repr(source)]
+    assert scr.Scraper.chapter_list(filled_cache, source) is chapters
+
+
+def test_chapter_list_builds_list_if_cache_outdated(filled_cache, monkeypatch):
+    """Test chapter_list creates a chapter list when outdated."""
+    import requests
+
+    req = requests_patch(text='''<table>
+        <a href="/test-series/5">Chapter link 5</a>
+        <a href="/test-series/4">Chapter link 4</a>
+    </table>''')
+    monkeypatch.setattr(requests, 'get', req)
+
+    from .context import mangasource
+    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    chapters = filled_cache._chapter_lists[repr(source)]
+    filled_cache._update_interval = 5000
+
+    new_chapters = scr.Scraper.chapter_list(filled_cache, source)
+    assert new_chapters is not chapters
+
+
+def test_chapter_list_builds_list_if_no_cache_available(
+        empty_cache, dummy_source, monkeypatch):
+    """Test chapter_list creates a chapter list when outdated."""
+    import requests
+
+    req = requests_patch(text='<table><a href="/ch/5">5</a></table>')
+    monkeypatch.setattr(requests, 'get', req)
+
+    new_chapters = scr.Scraper.chapter_list(empty_cache, dummy_source)
+    assert type(new_chapters) is dict
+
+
 def test_chapter_list_returns_empty_dict_for_empty_index(dummy_source,
                                                          empty_cache):
     """Test chapter_list gets empty dict for index with no chapters."""
@@ -422,19 +461,50 @@ def test_chapter_list_finds_all_chapters(various_indexes):
 def test_chapter_list_gets_chapter_numbers_for_all_entries(various_indexes):
     """Test chapter_list gets the chapter number from the index entry."""
     chapters = scr.Scraper.chapter_list(*various_indexes)
-    assert all([chap.replace('.', '', 1).isdecimal() for chap in chapters])
+    assert all(chap.replace('.', '', 1).isdecimal() for chap in chapters)
 
 
 def test_chapter_list_gets_chapter_number_without_html(various_indexes):
     """Test chapter_list gets the chapter number without any html."""
     chapters = scr.Scraper.chapter_list(*various_indexes)
-    assert all(['<' not in title for title in chapters])
+    assert all('<' not in chap for chap in chapters)
 
 
 def test_chapter_list_gets_url_for_each_chapter(various_indexes):
     """Test chapter_list gets the url for each chapter."""
     chapters = scr.Scraper.chapter_list(*various_indexes)
-    assert all([url.startswith('http') for url in chapters.values()])
+    assert all(url.startswith('http') for url in chapters.values())
+
+
+def test_chapter_list_adds_chapter_list_to_cache_missing_chapters(
+        empty_cache, dummy_source, monkeypatch):
+    """Test chapter_list adds chapter list to the cache."""
+    import requests
+
+    req = requests_patch(text='<table><a href="/ch/5">5</a></table>')
+    monkeypatch.setattr(requests, 'get', req)
+
+    new_chapters = scr.Scraper.chapter_list(empty_cache, dummy_source)
+    assert repr(dummy_source) in empty_cache._chapter_lists
+    assert empty_cache.get_chapter_list(dummy_source) is new_chapters
+
+
+def test_chapter_list_updates_chapter_list_for_old_cache(filled_cache,
+                                                         monkeypatch):
+    """Test chapter_list updates chapter list for an outdated cache."""
+    import requests
+
+    from .context import mangasource
+    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+
+    req = requests_patch(text='<table><a href="/ch/5">5</a></table>')
+    monkeypatch.setattr(requests, 'get', req)
+
+    chapters = filled_cache._chapter_lists[repr(source)]
+
+    scr.Scraper.chapter_list(filled_cache, source)
+
+    assert filled_cache.get_chapter_list(source) is not chapters
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}])
