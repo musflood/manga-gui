@@ -23,6 +23,8 @@ TEST_PAGE = '''
 <a href="/001/page/3"><img src="http://files.co/test.png" id="2"></a>
 <a href="/001/page/4"><img src="http://files.co/test.png" id="3"></a>
 <a href="/002/page/1"><img src="http://files.co/test.png" id="4"></a>
+
+<table><a href="/001/page/1">Chapter 1</a></table>
 </body>
 '''
 
@@ -111,12 +113,13 @@ def filled_cache(dummy_source):
     """Create an filled series cache.
 
     Has data for the following:
-        dummy_source -> Chp 1 only, last updated now
+        dummy_source -> Chp 1 only, last updated now, chapter list
         MangaSource: -> Chps 4 and 5, last updated 2 hours ago
             name: source2
             url: http://www.another.com/
             slug: -
         MangaSource: -> No chapters, last updated 12 hours ago, custom url,
+                        chapter list
             name: old-source
             url: http://old.net/
             slug:
@@ -125,7 +128,7 @@ def filled_cache(dummy_source):
 
     cache = seriescache.SeriesCache('test series')
     cache._index_pages = {
-        repr(dummy_source): '<a href="/test_series/1">Chapter link</a>',
+        repr(dummy_source): '<a href="/test_series/1/page/1">Chapter link</a>',
         '<MangaSource: source2 @ http://www.another.com/>': '''<table>
             <a href="/test-series/5">Chapter link</a>
             <a href="/test-series/4">Chapter link</a>
@@ -144,11 +147,9 @@ def filled_cache(dummy_source):
         '<MangaSource: old-source @ http://old.net/>': now - 43200
     }
     cache._chapter_lists = {
-        '<MangaSource: source2 @ http://www.another.com/>':
-            {
-                '5': 'http://another.net/test-series/5',
-                '4': 'http://another.net/test-series/4'
-            },
+        repr(dummy_source): {
+            '1': 'http://www.source.com/test_series/1/page/1'
+        },
         '<MangaSource: old-source @ http://old.net/>': {}
     }
 

@@ -78,8 +78,8 @@ def test_contains_true_if_an_item_is_in_the_cache(filled_cache, dummy_source):
     assert (dummy_source in filled_cache) is True
 
 
-def test_contains_false_if_an_item_is_not_in_the_cache(empty_cache,
-                                                       dummy_source):
+def test_contains_false_if_an_item_is_not_in_the_cache(
+        empty_cache, dummy_source):
     """Test that 'in' works with the series cache."""
     assert (dummy_source in empty_cache) is False
 
@@ -90,8 +90,8 @@ def test_has_outdated_cache_raises_error_for_bad_source(empty_cache):
         empty_cache.has_outdated_cache('http://t.co/')
 
 
-def test_has_outdated_cache_true_for_source_not_in_cache(empty_cache,
-                                                         dummy_source):
+def test_has_outdated_cache_true_for_source_not_in_cache(
+        empty_cache, dummy_source):
     """Test has_outdated_cache returns True for source not in cache."""
     assert empty_cache.has_outdated_cache(dummy_source) is True
 
@@ -131,8 +131,8 @@ def test_update_index_raises_error_for_non_string_index_url(value):
         empty_cache().update_index(dummy_source(), value)
 
 
-def test_update_index_adds_new_source_to_cache_if_not_in_cache(empty_cache,
-                                                               dummy_source):
+def test_update_index_adds_new_source_to_cache_if_not_in_cache(
+        empty_cache, dummy_source):
     """Test that update_index adds a new source if not in cache."""
     assert len(empty_cache) == 0
     empty_cache.update_index(dummy_source)
@@ -140,8 +140,8 @@ def test_update_index_adds_new_source_to_cache_if_not_in_cache(empty_cache,
     assert dummy_source in empty_cache
 
 
-def test_update_index_does_not_add_source_if_already_in_cache(filled_cache,
-                                                              dummy_source):
+def test_update_index_does_not_add_source_if_already_in_cache(
+        filled_cache, dummy_source):
     """Test that update_index does not add duplicate of source."""
     assert len(filled_cache) == 3
     assert dummy_source in filled_cache
@@ -150,24 +150,24 @@ def test_update_index_does_not_add_source_if_already_in_cache(filled_cache,
     assert dummy_source in filled_cache
 
 
-def test_update_index_updates_cached_index_for_a_source_in_cache(filled_cache,
-                                                                 dummy_source):
+def test_update_index_updates_cached_index_for_a_source_in_cache(
+        filled_cache, dummy_source):
     """Test that update_index updates the cache of a source."""
     old_index = filled_cache._index_pages[repr(dummy_source)]
     filled_cache.update_index(dummy_source)
     assert old_index != filled_cache._index_pages[repr(dummy_source)]
 
 
-def test_update_index_updates_update_time_for_a_source_in_cache(filled_cache,
-                                                                dummy_source):
+def test_update_index_updates_update_time_for_a_source_in_cache(
+        filled_cache, dummy_source):
     """Test that update_index updates the cache of a source."""
     old_timestamp = filled_cache._last_updated[repr(dummy_source)]
     filled_cache.update_index(dummy_source)
     assert old_timestamp < filled_cache._last_updated[repr(dummy_source)]
 
 
-def test_update_index_uses_root_url_if_no_custom_url_given(filled_cache,
-                                                           dummy_source):
+def test_update_index_uses_root_url_if_no_custom_url_given(
+        filled_cache, dummy_source):
     """Test that update_index uses source root url if no index_url given."""
     filled_cache.update_index(dummy_source)
     index_page = filled_cache._index_pages[repr(dummy_source)]
@@ -182,8 +182,8 @@ def test_update_index_adds_custom_url_if_given(empty_cache, dummy_source):
     assert empty_cache._custom_urls[repr(dummy_source)] == 'http://t.co/testS'
 
 
-def test_update_index_uses_given_custom_url_for_new_source(empty_cache,
-                                                           dummy_source):
+def test_update_index_uses_given_custom_url_for_new_source(
+        empty_cache, dummy_source):
     """Test that update_index uses index_url for index page if given."""
     empty_cache.update_index(dummy_source, 'http://t.co/testS')
     index_page = empty_cache._index_pages[repr(dummy_source)]
@@ -191,8 +191,8 @@ def test_update_index_uses_given_custom_url_for_new_source(empty_cache,
     assert 'http://t.co/testS' in index_page
 
 
-def test_update_index_uses_given_custom_url_for_dup_source(filled_cache,
-                                                           dummy_source):
+def test_update_index_uses_given_custom_url_for_dup_source(
+        filled_cache, dummy_source):
     """Test that update_index uses index_url for index page if given."""
     filled_cache.update_index(dummy_source, 'http://t.co/testS')
     index_page = filled_cache._index_pages[repr(dummy_source)]
@@ -236,17 +236,16 @@ def test_get_index_raises_error_for_non_string_index_url(value):
         empty_cache().get_index(dummy_source(), value)
 
 
-def test_get_index_for_source_not_in_cache_adds_to_cache(empty_cache,
-                                                         dummy_source):
+def test_get_index_for_source_not_in_cache_adds_to_cache(
+        empty_cache, dummy_source):
     """Test that get_index for source not in cache adds it."""
     assert dummy_source not in empty_cache
     empty_cache.get_index(dummy_source)
     assert dummy_source in empty_cache
 
 
-def test_get_index_for_source_not_in_cache_returns_new_index(empty_cache,
-                                                             dummy_source,
-                                                             monkeypatch):
+def test_get_index_for_source_not_in_cache_returns_new_index(
+        empty_cache, dummy_source, monkeypatch):
     """Test that get_index for source not in cache gets its index page."""
     import requests
     index = '<p>chap</p>'
@@ -255,8 +254,8 @@ def test_get_index_for_source_not_in_cache_returns_new_index(empty_cache,
     assert result == index
 
 
-def test_get_index_recent_source_returns_cached_index(filled_cache,
-                                                      dummy_source):
+def test_get_index_recent_source_returns_cached_index(
+        filled_cache, dummy_source):
     """Test that get_index for recent source returns cached index."""
     index = filled_cache._index_pages[repr(dummy_source)]
     result = filled_cache.get_index(dummy_source)
@@ -315,8 +314,8 @@ def test_set_chapter_list_raises_error_for_bad_source(empty_cache):
         empty_cache.set_chapter_list('http://t.co/', {})
 
 
-def test_set_chapter_list_raises_error_for_source_not_in_cache(empty_cache,
-                                                               dummy_source):
+def test_set_chapter_list_raises_error_for_source_not_in_cache(
+        empty_cache, dummy_source):
     """Test set_chapter_list raises a ValueError for source not in cache."""
     with pytest.raises(ValueError):
         empty_cache.set_chapter_list(dummy_source, {})
@@ -372,15 +371,24 @@ def test_set_chapter_list_raises_error_for_improper_or_partial_chap_url(value):
         cache.set_chapter_list(source, {'5': value})
 
 
-def test_set_chapter_list_adds_empty_chapter_list_for_source(filled_cache,
-                                                             dummy_source):
+def test_set_chapter_list_adds_source_to_chapter_list_cache(filled_cache):
+    """Test set_chapter_list adds the source to chap cache if not present."""
+    from .context import mangasource
+    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    assert repr(source) not in filled_cache._chapter_lists
+    filled_cache.set_chapter_list(source, {})
+    assert repr(source) in filled_cache._chapter_lists
+
+
+def test_set_chapter_list_sets_empty_chapter_list_for_source(
+        filled_cache, dummy_source):
     """Test set_chapter_list adds chapter list to cache for source."""
     filled_cache.set_chapter_list(dummy_source, {})
     assert filled_cache._chapter_lists[repr(dummy_source)] == {}
 
 
-def test_set_chapter_list_adds_filled_chapter_list_for_source(filled_cache,
-                                                              dummy_source):
+def test_set_chapter_list_sets_filled_chapter_list_for_source(
+        filled_cache, dummy_source):
     """Test set_chapter_list adds chapter list to cache for source."""
     chaps = {
         '5': 'http://foo.bar/chap/5',
@@ -390,17 +398,24 @@ def test_set_chapter_list_adds_filled_chapter_list_for_source(filled_cache,
     assert filled_cache._chapter_lists[repr(dummy_source)] == chaps
 
 
-def test_set_chapter_list_resets_chapter_list_for_source(filled_cache,
-                                                         dummy_source):
+def test_set_chapter_list_resets_chapter_list_for_source(
+        filled_cache, dummy_source):
     """Test set_chapter_list adds chapter list to cache for source."""
-    filled_cache.set_chapter_list(dummy_source, {})
-    assert filled_cache._chapter_lists[repr(dummy_source)] == {}
     chaps = {
         '5': 'http://foo.bar/chap/5',
         '5.3': 'http://foo.bar/chap/5.3'
     }
     filled_cache.set_chapter_list(dummy_source, chaps)
     assert filled_cache._chapter_lists[repr(dummy_source)] == chaps
+    filled_cache.set_chapter_list(dummy_source, {})
+    assert filled_cache._chapter_lists[repr(dummy_source)] == {}
+
+
+def test_set_chapter_list_can_set_chapter_list_to_none(
+        filled_cache, dummy_source):
+    """Test set_chapter_list can set the chapter list for a source to None."""
+    filled_cache.set_chapter_list(dummy_source, None)
+    assert filled_cache._chapter_lists[repr(dummy_source)] is None
 
 
 def test_get_chapter_list_raises_error_for_bad_source(empty_cache):
@@ -409,12 +424,11 @@ def test_get_chapter_list_raises_error_for_bad_source(empty_cache):
         empty_cache.get_chapter_list('http://t.co/')
 
 
-def test_get_chapter_list_returns_stored_list_for_recent_source(filled_cache):
+def test_get_chapter_list_returns_stored_list_for_recent_source(
+        filled_cache, dummy_source):
     """Test get_chapter_list returns cached chapter list for recent source."""
-    from .context import mangasource
-    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
-    chapters = filled_cache._chapter_lists[repr(source)]
-    assert filled_cache.get_chapter_list(source) == chapters
+    chapters = filled_cache._chapter_lists[repr(dummy_source)]
+    assert filled_cache.get_chapter_list(dummy_source) == chapters
 
 
 def test_get_chapter_list_returns_none_for_old_source(filled_cache):
@@ -426,14 +440,15 @@ def test_get_chapter_list_returns_none_for_old_source(filled_cache):
     assert filled_cache.get_chapter_list(source) is None
 
 
-def test_get_chapter_list_returns_none_for_source_not_in_cache(filled_cache):
+def test_get_chapter_list_returns_none_for_source_not_in_cache(empty_cache):
     """Test get_chapter_list returns None for source not in the cache."""
     from .context import mangasource
-    source = mangasource.MangaSource('new!', 'http://hot.co/', '')
-    assert filled_cache.get_chapter_list(source) is None
+    source = mangasource.MangaSource('new one', 'http://new.net', '+')
+    assert empty_cache.get_chapter_list(source) is None
 
 
-def test_get_chapter_list_returns_none_for_source_without_chaps(filled_cache,
-                                                                dummy_source):
+def test_get_chapter_list_returns_none_for_source_without_chaps(filled_cache):
     """Test get_chapter_list returns None for source. without cached chaps."""
-    assert filled_cache.get_chapter_list(dummy_source) is None
+    from .context import mangasource
+    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    assert filled_cache.get_chapter_list(source) is None

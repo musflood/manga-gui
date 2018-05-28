@@ -123,13 +123,13 @@ class SeriesCache(object):
                 'Cannot set chapter list for source without index.')
 
         number_re = re.compile(r'\d+\.\d+|\d+')
-        if type(chapter_list) is not dict:
+        if chapter_list is not None and type(chapter_list) is not dict:
             raise TypeError('chapter_list must be a dictionary.')
         if not all(type(key) is str and number_re.fullmatch(key)
-                   for key in chapter_list):
+                   for key in (chapter_list if chapter_list else [])):
             raise ValueError('Improperly formatted chapter numbers.')
         if not all(type(val) is str and val.startswith('http')
-                   for val in chapter_list.values()):
+                   for val in (chapter_list.values() if chapter_list else [])):
             raise ValueError('Improperly formatted chapter URLs.')
 
         self._chapter_lists[repr(source)] = chapter_list
