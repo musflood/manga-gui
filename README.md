@@ -4,7 +4,7 @@
 
 **Author**: Megan Flood
 
-**Version**: 0.2.1
+**Version**: 0.3.0
 
 ## Overview
 Download the chapters of your favorite manga from various sources online to your computer for offline reading.
@@ -41,7 +41,7 @@ In order to use the scraper directly, you must create a series and a source to p
 >>> source = MangaSource('Top Manga', 'http://www.manga.com', '-')
 ```
 
-Then to get the chapters available on the source for the series.
+Then, you can get the chapters available on the source for the series.
 ```python
 >>> from manga_saver.scraper import Scraper
 
@@ -55,9 +55,9 @@ Then to get the chapters available on the source for the series.
 }
 ```
 
-To get a generator of the binary data for the page images of a chapter.
+Or you can get a generator of the binary data of the page images for a chapter.
 ```python
->>> pages = Scraper.chapter_pages('http://www.manga.com/best-series-ever/55', source)
+>>> pages = Scraper.chapter_pages('55', series, source)
 >>> next(pages)
 
 (b'\x0b\xb1\x8eV\xf7b(\xe4\xee\x0e...', 'png')
@@ -77,9 +77,12 @@ You can test this application by running `pytest` in the same directory as the `
 ## Architecture
 Written in [Python 3.6](https://www.python.org/), with [pytest](https://docs.pytest.org/en/latest/) for testing.
 
+Uses [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/) for parsing HTML and [Requests](http://docs.python-requests.org/en/master/) to retrieve HTML pages and images.
+
 ## Change Log
 | Date | &emsp;
 | :--- | ---
+|**5-27-2018 7:03pm** | Added chapter list caching to SeriesCache and refactored public Scraper methods.
 |**5-25-2018 12:26am** | Completed first iteration of Scraper class and SeriesCache model.
 |**4-21-2018 11:17pm** | Completed first iteration of MangaSource model.
 |**4-21-2018 7:30pm** | Setup testing and automated testing.

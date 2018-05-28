@@ -115,7 +115,8 @@ class Scraper(object):
 
         Raises:
             TypeError: For improperly typed arguments.
-            ValueError: For empty chapter.
+            ValueError: For en empty chapter number.
+            KeyError: For a chapter that is not available.
 
         """
         if type(chapter) is not str:
@@ -135,8 +136,6 @@ class Scraper(object):
             chapter_url = chapter_urls[chapter]
         except KeyError:
             raise KeyError(f'Chapter {chapter} not available from {source}.')
-
-        print(chapter_url)
 
         if source.is_multipage:
             pages = cls._generate_multipage_chapter(chapter_url, source)
