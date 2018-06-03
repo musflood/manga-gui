@@ -107,8 +107,8 @@ def test_get_page_removes_image_link_from_html(dummy_source):
     assert html.find('a', href=lambda h: h in next_page) is None
 
 
-def test_get_page_has_empty_string_for_next_page_without_a_tag(dummy_source,
-                                                               monkeypatch):
+def test_get_page_has_empty_string_for_next_page_without_a_tag(
+        dummy_source, monkeypatch):
     """Test _get_page returns an empty string for next page URL on img tag."""
     import requests
     req = requests_patch(text='<img src="https://file.co/img.png">',
@@ -170,8 +170,8 @@ def test_generate_multipage_chapter_yields_image_and_extension(dummy_source):
     assert ext == 'png'
 
 
-def test_generate_multipage_chapter_yields_all_images_in_chapter(dummy_source,
-                                                                 monkeypatch):
+def test_generate_multipage_chapter_yields_all_images_in_chapter(
+        dummy_source, monkeypatch):
     """Test _generate_multipage_chapter yeilds image data and extention."""
     import requests
 
@@ -200,8 +200,8 @@ def test_generate_multipage_chapter_yields_all_images_in_chapter(dummy_source,
     assert imgs[0] != imgs[1] != imgs[2] != imgs[3]
 
 
-def test_generate_multipage_chapter_works_for_last_chapter(dummy_source,
-                                                           monkeypatch):
+def test_generate_multipage_chapter_works_for_last_chapter(
+        dummy_source, monkeypatch):
     """Test _generate_multipage_chapter still works for final chapter."""
     import requests
 
@@ -232,8 +232,8 @@ def test_generate_multipage_chapter_works_for_last_chapter(dummy_source,
     assert len(imgs) == 4
 
 
-def test_generate_multipage_chapter_works_dashed_url(dummy_source,
-                                                     monkeypatch):
+def test_generate_multipage_chapter_works_dashed_url(
+        dummy_source, monkeypatch):
     """Test _generate_multipage_chapter still works for dashed chapter url."""
     import requests
 
@@ -295,8 +295,8 @@ def test_generate_singlepage_chapter_yields_image_and_extension(dummy_source):
     assert ext == 'png'
 
 
-def test_generate_singlepage_chapter_yields_all_images_in_chapter(dummy_source,
-                                                                  monkeypatch):
+def test_generate_singlepage_chapter_yields_all_images_in_chapter(
+        dummy_source, monkeypatch):
     """Test _generate_singlepage_chapter yeilds image data and extention."""
     import requests
 
@@ -392,15 +392,64 @@ def test_chapter_list_raises_error_for_bad_seriescache(value):
         scr.Scraper.chapter_list(value, source)
 
 
-def test_chapter_list_raises_error_when_index_not_found(dummy_source,
-                                                        filled_cache):
+def test_chapter_list_raises_error_when_index_not_found(
+        dummy_source, filled_cache):
     """Test chapter_list raises ValueError for no index found in source."""
+    del filled_cache._chapter_lists[repr(dummy_source)]
     with pytest.raises(ValueError):
         scr.Scraper.chapter_list(filled_cache, dummy_source)
 
 
-def test_chapter_list_returns_empty_dict_for_empty_index(dummy_source,
-                                                         empty_cache):
+def test_chapter_list_sets_cached_list_to_none_when_index_not_found(
+        dummy_source, filled_cache):
+    """Test chapter_list sets cached list to None when no index found."""
+    del filled_cache._chapter_lists[repr(dummy_source)]
+    try:
+        scr.Scraper.chapter_list(filled_cache, dummy_source)
+    except ValueError:
+        assert filled_cache._chapter_lists[repr(dummy_source)] is None
+    else:
+        assert False  # Did not raise appropriate errpr
+
+
+def test_chapter_list_uses_cache_list_if_available(filled_cache, dummy_source):
+    """Test chapter_list returns the cached chapter list when available."""
+    chapters = filled_cache._chapter_lists[repr(dummy_source)]
+    assert scr.Scraper.chapter_list(filled_cache, dummy_source) is chapters
+
+
+def test_chapter_list_builds_list_if_cache_outdated(filled_cache, monkeypatch):
+    """Test chapter_list creates a chapter list when outdated."""
+    import requests
+    from .context import mangasource
+
+    req = requests_patch(text='''<table>
+        <a href="/test-series/5">Chapter link 5</a>
+        <a href="/test-series/4">Chapter link 4</a>
+    </table>''')
+    monkeypatch.setattr(requests, 'get', req)
+
+    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    chapters = filled_cache._chapter_lists[repr(source)]
+
+    new_chapters = scr.Scraper.chapter_list(filled_cache, source)
+    assert new_chapters is not chapters
+
+
+def test_chapter_list_builds_list_if_no_cache_available(
+        empty_cache, dummy_source, monkeypatch):
+    """Test chapter_list creates a chapter list when outdated."""
+    import requests
+
+    req = requests_patch(text='<table><a href="/ch/5">5</a></table>')
+    monkeypatch.setattr(requests, 'get', req)
+
+    new_chapters = scr.Scraper.chapter_list(empty_cache, dummy_source)
+    assert type(new_chapters) is dict
+
+
+def test_chapter_list_returns_empty_dict_for_empty_index(
+        dummy_source, empty_cache):
     """Test chapter_list gets empty dict for index with no chapters."""
     from datetime import datetime
     now = datetime.utcnow().timestamp()
@@ -422,45 +471,147 @@ def test_chapter_list_finds_all_chapters(various_indexes):
 def test_chapter_list_gets_chapter_numbers_for_all_entries(various_indexes):
     """Test chapter_list gets the chapter number from the index entry."""
     chapters = scr.Scraper.chapter_list(*various_indexes)
-    assert all([chap.replace('.', '').isdecimal() for chap in chapters])
+    assert all(chap.replace('.', '', 1).isdecimal() for chap in chapters)
 
 
 def test_chapter_list_gets_chapter_number_without_html(various_indexes):
     """Test chapter_list gets the chapter number without any html."""
     chapters = scr.Scraper.chapter_list(*various_indexes)
-    assert all(['<' not in title for title in chapters])
+    assert all('<' not in chap for chap in chapters)
 
 
 def test_chapter_list_gets_url_for_each_chapter(various_indexes):
     """Test chapter_list gets the url for each chapter."""
     chapters = scr.Scraper.chapter_list(*various_indexes)
-    assert all([url.startswith('/') for url in chapters.values()])
+    assert all(url.startswith('http') for url in chapters.values())
+
+
+def test_chapter_list_adds_chapter_list_to_cache_missing_chapters(
+        empty_cache, dummy_source, monkeypatch):
+    """Test chapter_list adds chapter list to the cache."""
+    import requests
+
+    req = requests_patch(text='<table><a href="/ch/5">5</a></table>')
+    monkeypatch.setattr(requests, 'get', req)
+
+    new_chapters = scr.Scraper.chapter_list(empty_cache, dummy_source)
+    assert repr(dummy_source) in empty_cache._chapter_lists
+    assert empty_cache.get_chapter_list(dummy_source) is new_chapters
+
+
+def test_chapter_list_updates_chapter_list_for_old_cache(
+        filled_cache, monkeypatch):
+    """Test chapter_list updates chapter list for an outdated cache."""
+    import requests
+
+    from .context import mangasource
+    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+
+    req = requests_patch(text='<table><a href="/ch/5">5</a></table>')
+    monkeypatch.setattr(requests, 'get', req)
+
+    chapters = filled_cache._chapter_lists[repr(source)]
+
+    scr.Scraper.chapter_list(filled_cache, source)
+
+    assert filled_cache.get_chapter_list(source) is not chapters
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}])
-def test_chapter_pages_raises_error_for_non_string_url(value):
-    """Test chapter_pages raises a TypeError for bad url."""
+def test_chapter_pages_raises_error_for_non_string_chapter(value):
+    """Test chapter_pages raises a TypeError for bad chapter."""
+    from .context import mangasource
+    from .context import seriescache
+    source = mangasource.MangaSource('test', 'www.test.com', '_')
+    cache = seriescache.SeriesCache('title')
+    with pytest.raises(TypeError):
+        scr.Scraper.chapter_pages(value, cache, source)
+
+
+@pytest.mark.parametrize('value', [500, [], 2.1, {}, 'title'])
+def test_chapter_pages_raises_error_for_bad_seriescache(value):
+    """Test chapter_pages raises a TypeError for bad cache."""
     from .context import mangasource
     source = mangasource.MangaSource('test', 'www.test.com', '_')
     with pytest.raises(TypeError):
-        scr.Scraper.chapter_pages(value, source)
+        scr.Scraper.chapter_pages('http://t.com/', value, source)
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}, 'www.test.com'])
 def test_chapter_pages_raises_error_for_bad_mangasource(value):
     """Test chapter_pages raises a TypeError for bad source."""
+    from .context import seriescache
+    cache = seriescache.SeriesCache('title')
     with pytest.raises(TypeError):
-        scr.Scraper.chapter_pages('http://t.com/', value)
+        scr.Scraper.chapter_pages('http://t.com/', cache, value)
 
 
-def test_chapter_pages_raises_error_for_empty_url(dummy_source):
-    """Test chapter_pages raises ValueError for empty url."""
+def test_chapter_pages_raises_error_for_empty_chap(empty_cache, dummy_source):
+    """Test chapter_pages raises ValueError for empty chapter number."""
     with pytest.raises(ValueError):
-        scr.Scraper.chapter_pages('', dummy_source)
+        scr.Scraper.chapter_pages('', empty_cache, dummy_source)
 
 
-def test_chapter_pages_yields_all_images_in_multipage_chapter(dummy_source,
-                                                              monkeypatch):
+def test_chapter_pages_raises_error_for_chapter_not_in_chapter_list(
+        empty_cache, dummy_source, monkeypatch):
+    """Test chapter_pages raises a KeyError for chapter not in chapter list."""
+    import requests
+
+    req = requests_patch(text='<table><a href="/10">Chapter 10</a></table>')
+    monkeypatch.setattr(requests, 'get', req)
+
+    with pytest.raises(KeyError):
+        scr.Scraper.chapter_pages('1', empty_cache, dummy_source)
+
+
+def test_chapter_pages_uses_cached_chapter_url_when_available(
+        filled_cache, dummy_source, monkeypatch):
+    """Test chapter_pages uses cached chapter URL from chapter list cache."""
+    import requests
+
+    req = requests_patch(text='<table><a href="/10">Chapter 10</a></table>')
+    monkeypatch.setattr(requests, 'get', req)
+
+    chapters = filled_cache.get_chapter_list(dummy_source)
+
+    assert '10' not in chapters and '1' in chapters
+
+    pages = scr.Scraper.chapter_pages('1', filled_cache, dummy_source)
+
+    assert pages is not None
+    with pytest.raises(KeyError):
+        scr.Scraper.chapter_pages('10', filled_cache, dummy_source)
+
+
+def test_chapter_pages_gets_new_chapter_url_when_not_available(
+        empty_cache, dummy_source, monkeypatch):
+    """Test chapter_pages retrieves new chapter list when not available."""
+    import requests
+
+    req = requests_patch(text='<table><a href="/10">Chapter 10</a></table>')
+    monkeypatch.setattr(requests, 'get', req)
+
+    pages = scr.Scraper.chapter_pages('10', empty_cache, dummy_source)
+    assert pages is not None
+
+
+def test_chapter_pages_updates_chapter_list_cache_when_not_available(
+        empty_cache, dummy_source, monkeypatch):
+    """Test chapter_pages retrieves new chapter list when not available."""
+    import requests
+
+    req = requests_patch(text='<table><a href="/10">Chapter 10</a></table>')
+    monkeypatch.setattr(requests, 'get', req)
+
+    assert empty_cache.get_chapter_list(dummy_source) is None
+
+    scr.Scraper.chapter_pages('10', empty_cache, dummy_source)
+
+    assert '10' in empty_cache.get_chapter_list(dummy_source)
+
+
+def test_chapter_pages_yields_all_images_in_multipage_chapter(
+        filled_cache, dummy_source, monkeypatch):
     """Test chapter_pages yeilds all images in multipage source."""
     import requests
 
@@ -468,7 +619,8 @@ def test_chapter_pages_yields_all_images_in_multipage_chapter(dummy_source,
         n = 2
         while True:
             pg = n // 2
-            yield f'''<a href="/{pg // ch_len + 2}/page/{pg % ch_len + 1}">
+            yield f'''
+            <a href="/test_series/{pg // ch_len + 1}/page/{pg % ch_len + 1}">
             <img src="https://file.co/img.png">
             </a>'''
             n += 1
@@ -482,14 +634,14 @@ def test_chapter_pages_yields_all_images_in_multipage_chapter(dummy_source,
     req = requests_patch(text=page_txt(4), content=content())
     monkeypatch.setattr(requests, 'get', req)
 
-    pages = scr.Scraper.chapter_pages('http://t.com/2/page/1', dummy_source)
+    pages = scr.Scraper.chapter_pages('1', filled_cache, dummy_source)
     imgs = [pg for pg in pages]
     assert len(imgs) == 4
     assert imgs[0] != imgs[1] != imgs[2] != imgs[3]
 
 
-def test_chapter_pages_yields_all_images_in_singlepage_chapter(dummy_source,
-                                                               monkeypatch):
+def test_chapter_pages_yields_all_images_in_singlepage_chapter(
+        filled_cache, dummy_source, monkeypatch):
     """Test chapter_pages yeilds all images in singlepage source."""
     import requests
     dummy_source.is_multipage = False
@@ -510,7 +662,7 @@ def test_chapter_pages_yields_all_images_in_singlepage_chapter(dummy_source,
     req = requests_patch(text=page_txt, content=content())
     monkeypatch.setattr(requests, 'get', req)
 
-    pages = scr.Scraper.chapter_pages('http://t.com/1', dummy_source)
+    pages = scr.Scraper.chapter_pages('1', filled_cache, dummy_source)
     imgs = [pg for pg in pages]
     assert len(imgs) == 4
     assert imgs[0] != imgs[1] != imgs[2] != imgs[3]
