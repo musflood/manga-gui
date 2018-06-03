@@ -5,8 +5,8 @@ import urllib
 from bs4 import BeautifulSoup
 import requests
 
-from manga_saver.mangasource import MangaSource
-from manga_saver.seriescache import SeriesCache
+from manga_saver.models.mangasource import MangaSource
+from manga_saver.models.seriescache import SeriesCache
 
 
 class Scraper(object):
