@@ -4,6 +4,7 @@ requires = [
     'beautifulsoup4',
     'Pillow == 5.0.0',
     'PyPDF2',
+    'PyQt5',
     'requests'
 ]
 
