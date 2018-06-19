@@ -1,9 +1,13 @@
 """Widget for the list of chapters for a series."""
+import os
+
 from PyQt5.QtWidgets import (QFrame, QVBoxLayout, QGridLayout, QLabel,
                              QScrollArea, QCheckBox, QHBoxLayout, QFormLayout,
-                             QWidget)
-from PyQt5.QtGui import QFont
+                             QWidget, QPushButton)
+from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt
+
+from manga_saver.views import ICON_DIR
 
 
 class ChapterListWidget(QFrame):
@@ -28,9 +32,7 @@ class ChapterListWidget(QFrame):
 
     def add_top_frame(self):
         """Add top frame with series details."""
-        frame = QFrame()
-
-        vbox = QVBoxLayout(frame)
+        vbox = QVBoxLayout()
         title_label = QLabel('Series Title')
         title_label.setFont(self.TITLE_FONT)
         vbox.addWidget(title_label)
@@ -48,9 +50,9 @@ class ChapterListWidget(QFrame):
 
         vbox.addLayout(hbox)
 
-        self.box_layout.addWidget(frame, stretch=1)
+        self.box_layout.addLayout(vbox, stretch=1)
 
-        return frame
+        return vbox
 
     def add_bottom_frame(self):
         """Add bottom frame with chapter list."""
@@ -64,8 +66,50 @@ class ChapterListWidget(QFrame):
         vbox.setAlignment(Qt.AlignTop)
 
         for _ in range(30):
-            vbox.addWidget(QLabel('things'))
+            vbox.addLayout(ChapterListEntryLayout('things'))
+            vbox.addWidget(HorizontalLine())
 
         self.box_layout.addWidget(scroll_area, stretch=4)
 
         return scroll_area
+
+
+class ChapterListEntryLayout(QHBoxLayout):
+    """Details about a specific chapter for the manga chapter list."""
+
+    def __init__(self, chapter):
+        """Create an entry for the chapter list."""
+        super(ChapterListEntryLayout, self).__init__()
+
+        self.LIGHT_DOWNLOAD_ICON = QPixmap(
+            os.path.join(ICON_DIR, 'download_light.png'))
+        self.LIGHT_PDF_ICON = QPixmap(os.path.join(ICON_DIR, 'book_light.png'))
+
+        self.DARK_DOWNLOAD_ICON = QPixmap(
+            os.path.join(ICON_DIR, 'download_dark.png'))
+        self.DARK_PDF_ICON = QPixmap(os.path.join(ICON_DIR, 'book_dark.png'))
+
+        self.chapter = chapter
+        self.init_ui()
+
+    def init_ui(self):
+        """Build a chapter list entry with icons."""
+        self.addWidget(QLabel(self.chapter))
+        self.addStretch(1)
+
+        download_label = QLabel()
+        download_label.setPixmap(self.LIGHT_DOWNLOAD_ICON)
+        self.addWidget(download_label)
+        pdf_label = QLabel()
+        pdf_label.setPixmap(self.LIGHT_PDF_ICON)
+        self.addWidget(pdf_label)
+
+
+class HorizontalLine(QFrame):
+    """Horizontal bar that extends across the parent area."""
+
+    def __init__(self):
+        """Create a horizontal line."""
+        super(HorizontalLine, self).__init__()
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)
