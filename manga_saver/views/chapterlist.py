@@ -1,10 +1,10 @@
 """Widget for the list of chapters for a series."""
 import os
 
-from PyQt5.QtWidgets import (QFrame, QVBoxLayout, QGridLayout, QLabel,
-                             QScrollArea, QCheckBox, QHBoxLayout, QFormLayout,
-                             QWidget, QPushButton)
-from PyQt5.QtGui import QFont, QPixmap
+from PyQt5.QtWidgets import (QFrame, QVBoxLayout, QLabel,
+                             QScrollArea, QCheckBox, QHBoxLayout,
+                             QWidget, QPushButton, QMenu)
+from PyQt5.QtGui import QFont, QPixmap, QPainter
 from PyQt5.QtCore import Qt
 
 from manga_saver.views import ICON_DIR
@@ -65,8 +65,8 @@ class ChapterListWidget(QFrame):
         vbox = QVBoxLayout(scroll_area.widget())
         vbox.setAlignment(Qt.AlignTop)
 
-        for _ in range(30):
-            vbox.addLayout(ChapterListEntryLayout('things'))
+        for n in range(30):
+            vbox.addLayout(ChapterListEntryLayout(f'things {n}'))
             vbox.addWidget(HorizontalLine())
 
         self.box_layout.addWidget(scroll_area, stretch=4)
@@ -81,13 +81,13 @@ class ChapterListEntryLayout(QHBoxLayout):
         """Create an entry for the chapter list."""
         super(ChapterListEntryLayout, self).__init__()
 
-        self.LIGHT_DOWNLOAD_ICON = QPixmap(
-            os.path.join(ICON_DIR, 'download_light.png'))
-        self.LIGHT_PDF_ICON = QPixmap(os.path.join(ICON_DIR, 'book_light.png'))
+        self.LIGHT_DOWNLOAD_ICON = os.path.join(ICON_DIR, 'download_light.png')
+        self.LIGHT_PDF_ICON = os.path.join(ICON_DIR, 'book_light.png')
 
-        self.DARK_DOWNLOAD_ICON = QPixmap(
-            os.path.join(ICON_DIR, 'download_dark.png'))
-        self.DARK_PDF_ICON = QPixmap(os.path.join(ICON_DIR, 'book_dark.png'))
+        self.DARK_DOWNLOAD_ICON = os.path.join(ICON_DIR, 'download_dark.png')
+        self.DARK_PDF_ICON = os.path.join(ICON_DIR, 'book_dark.png')
+
+        self.CHECK_ICON = QPixmap(os.path.join(ICON_DIR, 'check_solid.png'))
 
         self.chapter = chapter
         self.init_ui()
@@ -97,12 +97,58 @@ class ChapterListEntryLayout(QHBoxLayout):
         self.addWidget(QLabel(self.chapter))
         self.addStretch(1)
 
+        self.addWidget(self.make_download_icon())
+        self.addWidget(self.make_pdf_icon())
+
+    def make_download_icon(self):
+        """Make a download icon to add to the chapter list entry."""
         download_label = QLabel()
-        download_label.setPixmap(self.LIGHT_DOWNLOAD_ICON)
-        self.addWidget(download_label)
+        download_label.setCursor(Qt.PointingHandCursor)
+        download_label.setToolTip('Download')
+
+        download_menu = QMenu()
+        download_menu.addAction('Download and convert to PDF')
+        download_menu.addSeparator()
+        download_menu.addAction('Download all above')
+        download_menu.addAction('Download all above and convert to PDF')
+
+        download_label.setContextMenuPolicy(Qt.CustomContextMenu)
+        download_label.customContextMenuRequested.connect(
+            lambda p: download_menu.exec_(download_label.mapToGlobal(p))
+        )
+        # download_label.mousePressEvent = lambda event: print(self.chapter)
+
+        download_img = QPixmap(self.LIGHT_DOWNLOAD_ICON)
+        download_label.setPixmap(download_img)
+
+        return download_label
+
+    def make_pdf_icon(self):
+        """Make a pdf convert icon to add to the chapter list entry."""
         pdf_label = QLabel()
-        pdf_label.setPixmap(self.LIGHT_PDF_ICON)
-        self.addWidget(pdf_label)
+        pdf_label.setCursor(Qt.PointingHandCursor)
+        pdf_label.setToolTip('Convert to PDF')
+
+        pdf_menu = QMenu()
+        pdf_menu.addAction('Convert all above to PDF')
+
+        pdf_label.setContextMenuPolicy(Qt.CustomContextMenu)
+        pdf_label.customContextMenuRequested.connect(
+            lambda p: pdf_menu.exec_(pdf_label.mapToGlobal(p))
+        )
+
+        pdf_img = QPixmap(self.LIGHT_PDF_ICON)
+        pdf_label.setPixmap(pdf_img)
+
+        return pdf_label
+
+    def paint_checkmark(self, pixmap):
+        """Paint a checkmark on the given pixmap."""
+        painter = QPainter()
+        painter.begin(pixmap)
+        painter.drawPixmap(5, 5, 10, 10, self.CHECK_ICON)
+        painter.end()
+        return pixmap
 
 
 class HorizontalLine(QFrame):
