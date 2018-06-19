@@ -14,12 +14,13 @@ class ChapterListWidget(QFrame):
     """List of chapters for a series."""
 
     TITLE_FONT = QFont()
-    TITLE_FONT.setPointSize(20)
+    TITLE_FONT.setPointSize(25)
 
-    def __init__(self):  # , series, source):
+    def __init__(self, series_title):  # , series, source):
         """List the chapters for a series."""
         super(ChapterListWidget, self).__init__()
 
+        self.series_title = series_title
         self.init_ui()
 
     def init_ui(self):
@@ -33,9 +34,17 @@ class ChapterListWidget(QFrame):
     def add_top_frame(self):
         """Add top frame with series details."""
         vbox = QVBoxLayout()
-        title_label = QLabel('Series Title')
+
+        hbox = QHBoxLayout()
+
+        title_label = QLabel(self.series_title)
         title_label.setFont(self.TITLE_FONT)
-        vbox.addWidget(title_label)
+        hbox.addWidget(title_label)
+        hbox.addStretch(1)
+
+        hbox.addWidget(self.make_favorite_checkbox())
+
+        vbox.addLayout(hbox)
 
         hbox = QHBoxLayout()
 
@@ -44,15 +53,47 @@ class ChapterListWidget(QFrame):
         hbox.addWidget(date_label)
 
         hbox.addStretch(1)
-        fav_cb = QCheckBox()
-        hbox.addWidget(fav_cb)
-        hbox.addWidget(QLabel('Favorite'))
+
+        hbox.addWidget(self.make_download_button())
 
         vbox.addLayout(hbox)
+        vbox.setAlignment(Qt.AlignBottom)
 
-        self.box_layout.addLayout(vbox, stretch=1)
+        self.box_layout.addLayout(vbox)
 
         return vbox
+
+    def make_favorite_checkbox(self):
+        """Create a custom checkbox for marking favorites."""
+        fav_cb = QCheckBox()
+        fav_cb.setToolTip('Favorite')
+        fav_cb.setCursor(Qt.PointingHandCursor)
+        fav_cb.setStyleSheet(f'''
+            QCheckBox::indicator:unchecked {{
+                image: url({os.path.join(ICON_DIR, "star_outline.png")});
+            }}
+            QCheckBox::indicator:checked {{
+                image: url({os.path.join(ICON_DIR, "star_filled.png")});
+            }}
+            QCheckBox {{
+                margin-right: 5px;
+            }}
+        ''')
+        return fav_cb
+
+    def make_download_button(self):
+        """Create a menu button for downloading multiple chapters."""
+        download_button = QPushButton('Download all')
+        download_menu = QMenu()
+        download_menu.addAction('Download all available chapters')
+        download_menu.addAction(
+            'Download all available chapters and convert to PDF')
+        download_menu.addSeparator()
+        download_menu.addAction('Download all undownloaded chapters')
+        download_menu.addAction(
+            'Download all undownloaded chapters and convert to PDF')
+        download_button.setMenu(download_menu)
+        return download_button
 
     def add_bottom_frame(self):
         """Add bottom frame with chapter list."""
@@ -65,13 +106,24 @@ class ChapterListWidget(QFrame):
         vbox = QVBoxLayout(scroll_area.widget())
         vbox.setAlignment(Qt.AlignTop)
 
-        for n in range(30):
-            vbox.addLayout(ChapterListEntryLayout(f'things {n}'))
-            vbox.addWidget(HorizontalLine())
+        self.add_no_chapters_label(vbox)
 
-        self.box_layout.addWidget(scroll_area, stretch=4)
+        self.box_layout.addWidget(scroll_area)
 
         return scroll_area
+
+    def add_no_chapters_label(self, layout):
+        """Create a label for when no chapters are available."""
+        hbox = QHBoxLayout()
+        hbox.addWidget(QLabel('No chapters yet.'))
+        hbox.setAlignment(Qt.AlignHCenter)
+        layout.addLayout(hbox)
+
+    def add_chapter_entry(self, chapter, layout):
+        """Create an entry for the chapter list."""
+        if layout.children():
+            layout.addWidget(HorizontalLine())
+        layout.addLayout(ChapterListEntryLayout(chapter))
 
 
 class ChapterListEntryLayout(QHBoxLayout):

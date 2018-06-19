@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
         fav_series_list = QListWidget()
         box.addWidget(fav_series_list)
 
-        chapter_area = ChapterListWidget()
+        chapter_area = ChapterListWidget('Series title')
 
         splitter = QSplitter(Qt.Horizontal)
         splitter.addWidget(fav_series_area)
