@@ -1,15 +1,14 @@
 """Main window frame for the GUI."""
-import os
-
-from PyQt5.QtWidgets import (QMainWindow, QHBoxLayout, QFrame, QScrollArea,
+from PyQt5.QtWidgets import (QMainWindow, QHBoxLayout, QFrame,
                              QAction, QDockWidget, QListWidget, QSplitter,
                              QComboBox, QWidget, QSizePolicy, QLineEdit,
-                             QToolBar)
+                             QToolBar, QDesktopWidget, QStyleFactory)
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QSize
 
-from manga_saver.views import ICON_DIR
+from manga_saver.views import ICONS
 from manga_saver.views.chapterlist import ChapterListWidget
+from manga_saver.views.queuearea import QueueArea
 
 
 class MainWindow(QMainWindow):
@@ -28,7 +27,7 @@ class MainWindow(QMainWindow):
 
     def init_ui(self):
         """Create a main window skeleton."""
-        # self.source_input, self.refresh_act = self.add_top_bar()
+        self.setWindowTitle('Saber')
         self.toolbar = self.add_top_bar()
 
         self.statusBar().showMessage('Choose a source')
@@ -39,7 +38,8 @@ class MainWindow(QMainWindow):
 
         self.add_menubar()
 
-        self.setMinimumSize(700, 500)
+        self.setMinimumSize(800, 600)
+        self.center()
 
     def add_top_bar(self):
         """Add the top bar with source dropdown and search bar."""
@@ -62,6 +62,7 @@ class MainWindow(QMainWindow):
         splitter.addWidget(fav_series_area)
         splitter.addWidget(chapter_area)
         splitter.setCollapsible(1, False)
+        splitter.setSizes([200])
 
         self.setCentralWidget(splitter)
 
@@ -70,8 +71,11 @@ class MainWindow(QMainWindow):
     def add_queue_area(self):
         """Add the dock area for the download queue."""
         queue_dock = QDockWidget('Queue')
+        queue_dock.setStyle(QStyleFactory.create('Fusion'))
+        queue_dock.setMaximumWidth(250)
+        queue_dock.setMinimumWidth(200)
         queue_dock.setAllowedAreas(Qt.RightDockWidgetArea)
-        queue_area = QScrollArea()
+        queue_area = QueueArea()
         queue_dock.setWidget(queue_area)
         self.addDockWidget(Qt.RightDockWidgetArea, queue_dock)
 
@@ -88,6 +92,13 @@ class MainWindow(QMainWindow):
 
         view_menu.addAction(self.queue_dock.toggleViewAction())
 
+    def center(self):
+        """Center the window on the screen."""
+        frame = self.frameGeometry()
+        center_point = QDesktopWidget().availableGeometry().center()
+        frame.moveCenter(center_point)
+        self.move(frame.topLeft())
+
 
 class SourceToolBar(QToolBar):
     """Top bar of the main window, which manages sources and searching."""
@@ -96,9 +107,9 @@ class SourceToolBar(QToolBar):
         """Create and populate the source tool bar."""
         super(SourceToolBar, self).__init__()
 
-        self.YELLOW_ICON = QIcon(os.path.join(ICON_DIR, 'yellowdot.png'))
-        self.RED_ICON = QIcon(os.path.join(ICON_DIR, 'reddot.png'))
-        self.GREEN_ICON = QIcon(os.path.join(ICON_DIR, 'greendot.png'))
+        self.yellow_icon = QIcon(ICONS['YELLOW_STATUS'])
+        self.red_icon = QIcon(ICONS['RED_STATUS'])
+        self.green_icon = QIcon(ICONS['GREEN_STATUS'])
 
         self.init_ui()
 
@@ -112,7 +123,7 @@ class SourceToolBar(QToolBar):
         source_input.addItem('No sources added')
         self.addWidget(source_input)
 
-        refresh_act = QAction(self.YELLOW_ICON, 'Refresh Source', self)
+        refresh_act = QAction(self.yellow_icon, 'Refresh Source', self)
         # refresh_act.triggered.connect(self.refresh_source)
         refresh_act.setVisible(False)
         self.addAction(refresh_act)
@@ -126,7 +137,7 @@ class SourceToolBar(QToolBar):
         search_bar.setPlaceholderText('Search Series...')
         self.addWidget(search_bar)
 
-        search_icon = QIcon(os.path.join(ICON_DIR, 'search.png'))
+        search_icon = QIcon(ICONS['SEARCH'])
         search_act = QAction(search_icon, 'Search by Title', self)
 
         # search_act.triggered.connect(self.refresh_source)

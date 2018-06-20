@@ -1,13 +1,11 @@
 """Widget for the list of chapters for a series."""
-import os
-
 from PyQt5.QtWidgets import (QFrame, QVBoxLayout, QLabel,
                              QScrollArea, QCheckBox, QHBoxLayout,
                              QWidget, QPushButton, QMenu)
 from PyQt5.QtGui import QFont, QPixmap, QPainter
 from PyQt5.QtCore import Qt
 
-from manga_saver.views import ICON_DIR
+from manga_saver.views import ICONS, HorizontalLine
 
 
 class ChapterListWidget(QFrame):
@@ -23,77 +21,72 @@ class ChapterListWidget(QFrame):
         self.series_title = series_title
         self.init_ui()
 
+        self.add_no_chapters_label()
+
     def init_ui(self):
         """Build the chapter list framework."""
-        self.box_layout = QVBoxLayout()
-        self.setLayout(self.box_layout)
+        self.layout = QVBoxLayout(self)
 
         self.add_top_frame()
-        self.add_bottom_frame()
+        self.chapter_area_layout = self.add_bottom_frame()
 
     def add_top_frame(self):
         """Add top frame with series details."""
         vbox = QVBoxLayout()
 
         hbox = QHBoxLayout()
-
         title_label = QLabel(self.series_title)
         title_label.setFont(self.TITLE_FONT)
         hbox.addWidget(title_label)
         hbox.addStretch(1)
-
         hbox.addWidget(self.make_favorite_checkbox())
-
         vbox.addLayout(hbox)
 
         hbox = QHBoxLayout()
-
         hbox.addWidget(QLabel('Last Updated:'))
         date_label = QLabel('minutes ago')
         hbox.addWidget(date_label)
-
         hbox.addStretch(1)
-
         hbox.addWidget(self.make_download_button())
-
         vbox.addLayout(hbox)
+
         vbox.setAlignment(Qt.AlignBottom)
 
-        self.box_layout.addLayout(vbox)
+        self.layout.addLayout(vbox)
 
         return vbox
 
     def make_favorite_checkbox(self):
         """Create a custom checkbox for marking favorites."""
-        fav_cb = QCheckBox()
-        fav_cb.setToolTip('Favorite')
-        fav_cb.setCursor(Qt.PointingHandCursor)
-        fav_cb.setStyleSheet(f'''
+        checkbox = QCheckBox()
+        checkbox.setToolTip('Favorite')
+        checkbox.setCursor(Qt.PointingHandCursor)
+        checkbox.setStyleSheet(f'''
             QCheckBox::indicator:unchecked {{
-                image: url({os.path.join(ICON_DIR, "star_outline.png")});
+                image: url({ICONS["OUTLINE_STAR"]});
             }}
             QCheckBox::indicator:checked {{
-                image: url({os.path.join(ICON_DIR, "star_filled.png")});
+                image: url({ICONS["SOLID_STAR"]});
             }}
             QCheckBox {{
                 margin-right: 5px;
             }}
         ''')
-        return fav_cb
+        return checkbox
 
     def make_download_button(self):
         """Create a menu button for downloading multiple chapters."""
-        download_button = QPushButton('Download all')
-        download_menu = QMenu()
-        download_menu.addAction('Download all available chapters')
-        download_menu.addAction(
+        button = QPushButton('Download all')
+        menu = QMenu()
+        menu.addAction('Download all available chapters')
+        menu.addAction(
             'Download all available chapters and convert to PDF')
-        download_menu.addSeparator()
-        download_menu.addAction('Download all undownloaded chapters')
-        download_menu.addAction(
+        menu.addSeparator()
+        menu.addAction('Download all undownloaded chapters')
+        menu.addAction(
             'Download all undownloaded chapters and convert to PDF')
-        download_button.setMenu(download_menu)
-        return download_button
+        button.setMenu(menu)
+        return button
 
     def add_bottom_frame(self):
         """Add bottom frame with chapter list."""
@@ -106,24 +99,22 @@ class ChapterListWidget(QFrame):
         vbox = QVBoxLayout(scroll_area.widget())
         vbox.setAlignment(Qt.AlignTop)
 
-        self.add_no_chapters_label(vbox)
+        self.layout.addWidget(scroll_area)
 
-        self.box_layout.addWidget(scroll_area)
+        return vbox
 
-        return scroll_area
-
-    def add_no_chapters_label(self, layout):
+    def add_no_chapters_label(self):
         """Create a label for when no chapters are available."""
         hbox = QHBoxLayout()
         hbox.addWidget(QLabel('No chapters yet.'))
         hbox.setAlignment(Qt.AlignHCenter)
-        layout.addLayout(hbox)
+        self.chapter_area_layout.addLayout(hbox)
 
-    def add_chapter_entry(self, chapter, layout):
+    def add_chapter_entry(self, chapter):
         """Create an entry for the chapter list."""
-        if layout.children():
-            layout.addWidget(HorizontalLine())
-        layout.addLayout(ChapterListEntryLayout(chapter))
+        if self.chapter_area_layout.children():
+            self.chapter_area_layout.addWidget(HorizontalLine())
+        self.chapter_area_layout.addLayout(ChapterListEntryLayout(chapter))
 
 
 class ChapterListEntryLayout(QHBoxLayout):
@@ -133,13 +124,13 @@ class ChapterListEntryLayout(QHBoxLayout):
         """Create an entry for the chapter list."""
         super(ChapterListEntryLayout, self).__init__()
 
-        self.LIGHT_DOWNLOAD_ICON = os.path.join(ICON_DIR, 'download_light.png')
-        self.LIGHT_PDF_ICON = os.path.join(ICON_DIR, 'book_light.png')
+        self.light_download_icon = QPixmap(ICONS['LIGHT_DOWNLOAD'])
+        self.light_pdf_icon = QPixmap(ICONS['LIGHT_PDF'])
 
-        self.DARK_DOWNLOAD_ICON = os.path.join(ICON_DIR, 'download_dark.png')
-        self.DARK_PDF_ICON = os.path.join(ICON_DIR, 'book_dark.png')
+        self.dark_download_icon = QPixmap(ICONS['DARK_DOWNLOAD'])
+        self.dark_pdf_icon = QPixmap(ICONS['DARK_PDF'])
 
-        self.CHECK_ICON = QPixmap(os.path.join(ICON_DIR, 'check_solid.png'))
+        self.check_icon = QPixmap(ICONS['SOLID_CHECK'])
 
         self.chapter = chapter
         self.init_ui()
@@ -170,8 +161,7 @@ class ChapterListEntryLayout(QHBoxLayout):
         )
         # download_label.mousePressEvent = lambda event: print(self.chapter)
 
-        download_img = QPixmap(self.LIGHT_DOWNLOAD_ICON)
-        download_label.setPixmap(download_img)
+        download_label.setPixmap(self.light_download_icon)
 
         return download_label
 
@@ -189,8 +179,7 @@ class ChapterListEntryLayout(QHBoxLayout):
             lambda p: pdf_menu.exec_(pdf_label.mapToGlobal(p))
         )
 
-        pdf_img = QPixmap(self.LIGHT_PDF_ICON)
-        pdf_label.setPixmap(pdf_img)
+        pdf_label.setPixmap(self.light_pdf_icon)
 
         return pdf_label
 
@@ -198,16 +187,6 @@ class ChapterListEntryLayout(QHBoxLayout):
         """Paint a checkmark on the given pixmap."""
         painter = QPainter()
         painter.begin(pixmap)
-        painter.drawPixmap(5, 5, 10, 10, self.CHECK_ICON)
+        painter.drawPixmap(5, 5, 10, 10, self.check_icon)
         painter.end()
         return pixmap
-
-
-class HorizontalLine(QFrame):
-    """Horizontal bar that extends across the parent area."""
-
-    def __init__(self):
-        """Create a horizontal line."""
-        super(HorizontalLine, self).__init__()
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
