@@ -2,7 +2,7 @@
 from datetime import datetime
 import re
 
-from manga_saver.models.mangasource import MangaSource
+from manga_saver.models.manga_source import MangaSource
 
 import requests
 

@@ -7,8 +7,8 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QSize
 
 from manga_saver.views import ICONS
-from manga_saver.views.chapterlist import ChapterListWidget
-from manga_saver.views.queuearea import QueueArea
+from manga_saver.views.chapter_list import ChapterListWidget
+from manga_saver.views.queue_area import QueueArea
 
 
 class MainWindow(QMainWindow):
@@ -72,8 +72,7 @@ class MainWindow(QMainWindow):
         """Add the dock area for the download queue."""
         queue_dock = QDockWidget('Queue')
         queue_dock.setStyle(QStyleFactory.create('Fusion'))
-        queue_dock.setMaximumWidth(250)
-        queue_dock.setMinimumWidth(200)
+        queue_dock.setMinimumWidth(250)
         queue_dock.setAllowedAreas(Qt.RightDockWidgetArea)
         queue_area = QueueArea()
         queue_dock.setWidget(queue_area)

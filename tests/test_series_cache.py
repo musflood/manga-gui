@@ -1,8 +1,8 @@
-"""Tests for the seriescache module."""
+"""Tests for the series_cache module."""
 import pytest
 
 from .conftest import requests_patch
-from .context import seriescache as sc
+from .context import series_cache as sc
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}])
@@ -98,16 +98,16 @@ def test_has_outdated_cache_true_for_source_not_in_cache(
 
 def test_has_outdated_cache_true_for_old_source(filled_cache):
     """Test has_outdated_cache returns True for source past update interval."""
-    from .context import mangasource
-    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('old-source', 'http://old.net/', '')
     assert source in filled_cache
     assert filled_cache.has_outdated_cache(source) is True
 
 
 def test_has_outdated_cache_true_past_custom_update_interval(filled_cache):
     """Test has_outdated_cache for recent outside interval treats as old."""
-    from .context import mangasource
-    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('source2', 'http://www.another.com', '')
     filled_cache._update_interval = 5000
     assert filled_cache.has_outdated_cache(source) is True
 
@@ -202,8 +202,8 @@ def test_update_index_uses_given_custom_url_for_dup_source(
 
 def test_update_index_uses_cached_url_for_dup_source(filled_cache):
     """Test that update_index uses cached index url if available."""
-    from .context import mangasource
-    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('old-source', 'http://old.net/', '')
     assert source in filled_cache
     filled_cache.update_index(source)
     index_page = filled_cache._index_pages[repr(source)]
@@ -213,8 +213,8 @@ def test_update_index_uses_cached_url_for_dup_source(filled_cache):
 
 def test_update_index_replaces_cached_url_if_custom_url_given(filled_cache):
     """Test that update_index updates the cached url if a new one is given."""
-    from .context import mangasource
-    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('old-source', 'http://old.net/', '')
     url = filled_cache._custom_urls[repr(source)]
     assert url == 'https://old.chap.net/TestSeries'
     filled_cache.update_index(source, 'https://new.net/TestSeries')
@@ -264,8 +264,8 @@ def test_get_index_recent_source_returns_cached_index(
 
 def test_get_index_recent_uses_cached_index_for_same_custom_url(filled_cache):
     """Test that get_index for recent source uses cache for same custom url."""
-    from .context import mangasource
-    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('source2', 'http://www.another.com', '')
     old_index = filled_cache._index_pages[repr(source)]
     result = filled_cache.get_index(source, 'http://another.net/TestSeries')
     assert result == old_index
@@ -273,8 +273,8 @@ def test_get_index_recent_uses_cached_index_for_same_custom_url(filled_cache):
 
 def test_get_index_recent_gets_new_index_for_new_custom_url(filled_cache):
     """Test that get_index for recent source gets new index for custom url."""
-    from .context import mangasource
-    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('source2', 'http://www.another.com', '')
     old_index = filled_cache._index_pages[repr(source)]
     result = filled_cache.get_index(source, 'http://another.net/tEsTsErIeS')
     assert result != old_index
@@ -282,8 +282,8 @@ def test_get_index_recent_gets_new_index_for_new_custom_url(filled_cache):
 
 def test_get_index_old_source_updates_cached_index(filled_cache):
     """Test that get_index for old source updates cached index."""
-    from .context import mangasource
-    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('old-source', 'http://old.net/', '')
     old_index = filled_cache._index_pages[repr(source)]
     result = filled_cache.get_index(source)
     assert result != old_index
@@ -291,8 +291,8 @@ def test_get_index_old_source_updates_cached_index(filled_cache):
 
 def test_get_index_old_source_updates_timstamp(filled_cache):
     """Test that get_index for old source updates the timestamp."""
-    from .context import mangasource
-    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('old-source', 'http://old.net/', '')
     old_timestamp = filled_cache._last_updated[repr(source)]
     filled_cache.get_index(source)
     new_timestamp = filled_cache._last_updated[repr(source)]
@@ -301,8 +301,8 @@ def test_get_index_old_source_updates_timstamp(filled_cache):
 
 def test_get_index_old_source_updates_url_when_given(filled_cache):
     """Test that get_index for old source updates the custom url."""
-    from .context import mangasource
-    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('old-source', 'http://old.net/', '')
     assert filled_cache._custom_urls[repr(source)] != 'http://o.co/testseries'
     filled_cache.get_index(source, 'http://o.co/testseries')
     assert filled_cache._custom_urls[repr(source)] == 'http://o.co/testseries'
@@ -373,8 +373,8 @@ def test_set_chapter_list_raises_error_for_improper_or_partial_chap_url(value):
 
 def test_set_chapter_list_adds_source_to_chapter_list_cache(filled_cache):
     """Test set_chapter_list adds the source to chap cache if not present."""
-    from .context import mangasource
-    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('source2', 'http://www.another.com', '')
     assert repr(source) not in filled_cache._chapter_lists
     filled_cache.set_chapter_list(source, {})
     assert repr(source) in filled_cache._chapter_lists
@@ -433,8 +433,8 @@ def test_get_chapter_list_returns_stored_list_for_recent_source(
 
 def test_get_chapter_list_returns_none_for_old_source(filled_cache):
     """Test get_chapter_list returns None for old source."""
-    from .context import mangasource
-    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('old-source', 'http://old.net/', '')
     chapters = filled_cache._chapter_lists[repr(source)]
     assert chapters is not None
     assert filled_cache.get_chapter_list(source) is None
@@ -442,13 +442,13 @@ def test_get_chapter_list_returns_none_for_old_source(filled_cache):
 
 def test_get_chapter_list_returns_none_for_source_not_in_cache(empty_cache):
     """Test get_chapter_list returns None for source not in the cache."""
-    from .context import mangasource
-    source = mangasource.MangaSource('new one', 'http://new.net', '+')
+    from .context import manga_source
+    source = manga_source.MangaSource('new one', 'http://new.net', '+')
     assert empty_cache.get_chapter_list(source) is None
 
 
 def test_get_chapter_list_returns_none_for_source_without_chaps(filled_cache):
     """Test get_chapter_list returns None for source. without cached chaps."""
-    from .context import mangasource
-    source = mangasource.MangaSource('source2', 'http://www.another.com', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('source2', 'http://www.another.com', '')
     assert filled_cache.get_chapter_list(source) is None

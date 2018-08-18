@@ -1,5 +1,5 @@
 """Tests for the manga_source module."""
-from .context import mangasource as ms
+from .context import manga_source as ms
 
 import pytest
 

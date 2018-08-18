@@ -56,6 +56,14 @@ class QueueAreaItem(QFrame):
         self.layout = QVBoxLayout(self)
         hbox = QHBoxLayout()
         hbox.addWidget(QLabel(f'{self.series_title} - {self.chapter}'))
+        hbox.addStretch(1)
+
+        icon = QLabel()
+        icon.setPixmap(self.download_icon)
+        hbox.addWidget(icon)
+        icon = QLabel()
+        icon.setPixmap(self.pdf_icon)
+        hbox.addWidget(icon)
         self.layout.addLayout(hbox)
 
         self.status_label = QLabel()

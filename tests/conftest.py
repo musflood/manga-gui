@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 import pytest
 import requests
 
-from .context import mangasource
-from .context import seriescache
+from .context import manga_source
+from .context import series_cache
 
 
 TEST_PAGE = '''
@@ -65,7 +65,7 @@ def offline_requests(monkeypatch):
 @pytest.fixture
 def dummy_source():
     """Create a basic MangaSource."""
-    return mangasource.MangaSource(
+    return manga_source.MangaSource(
         'test source', 'http://www.source.com/', '_')
 
 
@@ -105,7 +105,7 @@ def dummy_soup():
 @pytest.fixture
 def empty_cache():
     """Create an empty series cache."""
-    return seriescache.SeriesCache('empty test')
+    return series_cache.SeriesCache('empty test')
 
 
 @pytest.fixture
@@ -126,7 +126,7 @@ def filled_cache(dummy_source):
     """
     now = datetime.utcnow().timestamp()
 
-    cache = seriescache.SeriesCache('test series')
+    cache = series_cache.SeriesCache('test series')
     cache._index_pages = {
         repr(dummy_source): '<a href="/test_series/1/page/1">Chapter link</a>',
         '<MangaSource: source2 @ http://www.another.com/>': '''<table>
@@ -538,13 +538,13 @@ Tate no Yuusha no Nariagari 31.5 </a>
 ])
 def various_indexes(request):
     """Parametrized cached index of various types with source."""
-    source = mangasource.MangaSource(
+    source = manga_source.MangaSource(
         'test source', 'http://www.source.com/', '_',
         index_tag=request.param['tag'], index_attrs=request.param['attr']
         )
 
     now = datetime.utcnow().timestamp()
-    cache = seriescache.SeriesCache('test series')
+    cache = series_cache.SeriesCache('test series')
     cache._index_pages = {repr(source): request.param['index']}
     cache._last_updated = {repr(source): now}
 

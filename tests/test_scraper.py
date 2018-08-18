@@ -69,14 +69,14 @@ def test_pull_page_image_takes_first_image_from_soup(dummy_soup, dummy_source):
 @pytest.mark.parametrize('value', [500, [], 2.1, {}])
 def test_get_page_raises_type_error_for_non_string_url(value):
     """Test that _get_page raises a TypeError for non-string URL."""
-    from .context import mangasource
-    source = mangasource.MangaSource('test', 'www.test.com', '_')
+    from .context import manga_source
+    source = manga_source.MangaSource('test', 'www.test.com', '_')
     with pytest.raises(TypeError):
         scr.Scraper._get_page(value, source)
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}, 'www.test.com'])
-def test_get_page_raises_type_error_for_bad_mangasource(value):
+def test_get_page_raises_type_error_for_bad_manga_source(value):
     """Test that _get_page raises a TypeError for non-MangaSource source."""
     with pytest.raises(TypeError):
         scr.Scraper._get_page('www.test.com', value)
@@ -134,14 +134,14 @@ def test_get_page_gets_next_url_with_relative_path(dummy_source, monkeypatch):
 @pytest.mark.parametrize('value', [500, [], 2.1, {}])
 def test_generate_multipage_chapter_raises_error_for_non_string_url(value):
     """Test _generate_multipage_chapter raises a TypeError for bad url."""
-    from .context import mangasource
-    source = mangasource.MangaSource('test', 'www.test.com', '_')
+    from .context import manga_source
+    source = manga_source.MangaSource('test', 'www.test.com', '_')
     with pytest.raises(TypeError):
         scr.Scraper._generate_multipage_chapter(value, source)
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}, 'www.test.com'])
-def test_generate_multipage_chapter_raises_error_for_bad_mangasource(value):
+def test_generate_multipage_chapter_raises_error_for_bad_manga_source(value):
     """Test _generate_multipage_chapter raises a TypeError for bad source."""
     with pytest.raises(TypeError):
         scr.Scraper._generate_multipage_chapter('http://t.com/', value)
@@ -259,14 +259,14 @@ def test_generate_multipage_chapter_works_dashed_url(
 @pytest.mark.parametrize('value', [500, [], 2.1, {}])
 def test_generate_singlepage_chapter_raises_error_for_non_string_url(value):
     """Test _generate_singlepage_chapter raises a TypeError for bad url."""
-    from .context import mangasource
-    source = mangasource.MangaSource('test', 'www.test.com', '_')
+    from .context import manga_source
+    source = manga_source.MangaSource('test', 'www.test.com', '_')
     with pytest.raises(TypeError):
         scr.Scraper._generate_singlepage_chapter(value, source)
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}, 'www.test.com'])
-def test_generate_singlepage_chapter_raises_error_for_bad_mangasource(value):
+def test_generate_singlepage_chapter_raises_error_for_bad_manga_source(value):
     """Test _generate_singlepage_chapter raises a TypeError for bad source."""
     with pytest.raises(TypeError):
         scr.Scraper._generate_singlepage_chapter('http://t.com/', value)
@@ -367,27 +367,27 @@ def test_chapter_finder_finds_the_chapter_number(title, text, num):
 @pytest.mark.parametrize('value', [500, [], 2.1, {}])
 def test_chapter_list_raises_error_for_non_string_url(value):
     """Test chapter_list raises a TypeError for bad url."""
-    from .context import mangasource, seriescache
-    source = mangasource.MangaSource('test', 'www.test.com', '_')
-    cache = seriescache.SeriesCache('title')
+    from .context import manga_source, series_cache
+    source = manga_source.MangaSource('test', 'www.test.com', '_')
+    cache = series_cache.SeriesCache('title')
     with pytest.raises(TypeError):
         scr.Scraper.chapter_list(cache, source, value)
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}, 'www.test.com'])
-def test_chapter_list_raises_error_for_bad_mangasource(value):
+def test_chapter_list_raises_error_for_bad_manga_source(value):
     """Test chapter_list raises a TypeError for bad source."""
-    from .context import seriescache
-    cache = seriescache.SeriesCache('title')
+    from .context import series_cache
+    cache = series_cache.SeriesCache('title')
     with pytest.raises(TypeError):
         scr.Scraper.chapter_list(cache, value)
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}, 'title'])
-def test_chapter_list_raises_error_for_bad_seriescache(value):
+def test_chapter_list_raises_error_for_bad_series_cache(value):
     """Test chapter_list raises a TypeError for bad source."""
-    from .context import mangasource
-    source = mangasource.MangaSource('test', 'www.test.com', '_')
+    from .context import manga_source
+    source = manga_source.MangaSource('test', 'www.test.com', '_')
     with pytest.raises(TypeError):
         scr.Scraper.chapter_list(value, source)
 
@@ -421,7 +421,7 @@ def test_chapter_list_uses_cache_list_if_available(filled_cache, dummy_source):
 def test_chapter_list_builds_list_if_cache_outdated(filled_cache, monkeypatch):
     """Test chapter_list creates a chapter list when outdated."""
     import requests
-    from .context import mangasource
+    from .context import manga_source
 
     req = requests_patch(text='''<table>
         <a href="/test-series/5">Chapter link 5</a>
@@ -429,7 +429,7 @@ def test_chapter_list_builds_list_if_cache_outdated(filled_cache, monkeypatch):
     </table>''')
     monkeypatch.setattr(requests, 'get', req)
 
-    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    source = manga_source.MangaSource('old-source', 'http://old.net/', '')
     chapters = filled_cache._chapter_lists[repr(source)]
 
     new_chapters = scr.Scraper.chapter_list(filled_cache, source)
@@ -504,8 +504,8 @@ def test_chapter_list_updates_chapter_list_for_old_cache(
     """Test chapter_list updates chapter list for an outdated cache."""
     import requests
 
-    from .context import mangasource
-    source = mangasource.MangaSource('old-source', 'http://old.net/', '')
+    from .context import manga_source
+    source = manga_source.MangaSource('old-source', 'http://old.net/', '')
 
     req = requests_patch(text='<table><a href="/ch/5">5</a></table>')
     monkeypatch.setattr(requests, 'get', req)
@@ -520,28 +520,28 @@ def test_chapter_list_updates_chapter_list_for_old_cache(
 @pytest.mark.parametrize('value', [500, [], 2.1, {}])
 def test_chapter_pages_raises_error_for_non_string_chapter(value):
     """Test chapter_pages raises a TypeError for bad chapter."""
-    from .context import mangasource
-    from .context import seriescache
-    source = mangasource.MangaSource('test', 'www.test.com', '_')
-    cache = seriescache.SeriesCache('title')
+    from .context import manga_source
+    from .context import series_cache
+    source = manga_source.MangaSource('test', 'www.test.com', '_')
+    cache = series_cache.SeriesCache('title')
     with pytest.raises(TypeError):
         scr.Scraper.chapter_pages(value, cache, source)
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}, 'title'])
-def test_chapter_pages_raises_error_for_bad_seriescache(value):
+def test_chapter_pages_raises_error_for_bad_series_cache(value):
     """Test chapter_pages raises a TypeError for bad cache."""
-    from .context import mangasource
-    source = mangasource.MangaSource('test', 'www.test.com', '_')
+    from .context import manga_source
+    source = manga_source.MangaSource('test', 'www.test.com', '_')
     with pytest.raises(TypeError):
         scr.Scraper.chapter_pages('http://t.com/', value, source)
 
 
 @pytest.mark.parametrize('value', [500, [], 2.1, {}, 'www.test.com'])
-def test_chapter_pages_raises_error_for_bad_mangasource(value):
+def test_chapter_pages_raises_error_for_bad_manga_source(value):
     """Test chapter_pages raises a TypeError for bad source."""
-    from .context import seriescache
-    cache = seriescache.SeriesCache('title')
+    from .context import series_cache
+    cache = series_cache.SeriesCache('title')
     with pytest.raises(TypeError):
         scr.Scraper.chapter_pages('http://t.com/', cache, value)
 

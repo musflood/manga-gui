@@ -34,8 +34,8 @@ Install the application with [`pip`](https://pip.pypa.io/en/stable/installing/).
 ## Usage
 In order to use the scraper directly, you must create a series and a source to pull from.
 ```python
->>> from manga_saver.models.mangasource import MangaSource
->>> from manga_saver.models.seriescache import SeriesCache
+>>> from manga_saver.models.manga_source import MangaSource
+>>> from manga_saver.models.series_cache import SeriesCache
 
 >>> series = SeriesCache('The Best Series Ever')
 >>> source = MangaSource('Top Manga', 'http://www.manga.com', '-')
