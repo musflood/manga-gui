@@ -28,27 +28,27 @@ class MainWindow(QMainWindow):
     def init_ui(self):
         """Create a main window skeleton."""
         self.setWindowTitle('Saber')
-        self.toolbar = self.add_top_bar()
+        self.toolbar = self._add_top_bar()
 
         self.statusBar().showMessage('Choose a source')
 
-        self.fav_series_area, self.chapter_area = self.add_main_area()
+        self.fav_series_area, self.chapter_area = self._add_main_area()
 
-        self.queue_dock, self.queue_area = self.add_queue_area()
+        self.queue_dock, self.queue_area = self._add_queue_area()
 
-        self.add_menubar()
+        self._add_menubar()
 
         self.setMinimumSize(800, 600)
         self.center()
 
-    def add_top_bar(self):
+    def _add_top_bar(self):
         """Add the top bar with source dropdown and search bar."""
         toolbar = SourceToolBar()
         self.addToolBar(toolbar)
         toolbar.setMovable(False)
         return toolbar
 
-    def add_main_area(self):
+    def _add_main_area(self):
         """Add the main area with the series list and chapter list areas."""
         fav_series_area = QFrame()
         fav_series_area.setMaximumWidth(200)
@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
 
         return fav_series_area, chapter_area
 
-    def add_queue_area(self):
+    def _add_queue_area(self):
         """Add the dock area for the download queue."""
         queue_dock = QDockWidget('Queue')
         queue_dock.setStyle(QStyleFactory.create('Fusion'))
@@ -80,7 +80,7 @@ class MainWindow(QMainWindow):
 
         return queue_dock, queue_area
 
-    def add_menubar(self):
+    def _add_menubar(self):
         """Add the menubar to the application."""
         menubar = self.menuBar()
         file_menu = menubar.addMenu('File')
@@ -139,7 +139,7 @@ class SourceToolBar(QToolBar):
         search_icon = QIcon(ICONS['SEARCH'])
         search_act = QAction(search_icon, 'Search by Title', self)
 
-        # search_act.triggered.connect(self.refresh_source)
+        # search_act.triggered.connect(self.search_title)
         self.addAction(search_act)
 
         self.addWidget(QWidget())

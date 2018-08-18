@@ -21,16 +21,14 @@ class ChapterListWidget(QFrame):
         self.series_title = series_title
         self.init_ui()
 
-        self.add_no_chapters_label()
-
     def init_ui(self):
         """Build the chapter list framework."""
         self.layout = QVBoxLayout(self)
 
-        self.add_top_frame()
-        self.chapter_area_layout = self.add_bottom_frame()
+        self._add_top_frame()
+        self.chapter_area_layout = self._add_bottom_frame()
 
-    def add_top_frame(self):
+    def _add_top_frame(self):
         """Add top frame with series details."""
         vbox = QVBoxLayout()
 
@@ -39,7 +37,7 @@ class ChapterListWidget(QFrame):
         title_label.setFont(self.TITLE_FONT)
         hbox.addWidget(title_label)
         hbox.addStretch(1)
-        hbox.addWidget(self.make_favorite_checkbox())
+        hbox.addWidget(self._make_favorite_checkbox())
         vbox.addLayout(hbox)
 
         hbox = QHBoxLayout()
@@ -47,7 +45,7 @@ class ChapterListWidget(QFrame):
         date_label = QLabel('minutes ago')
         hbox.addWidget(date_label)
         hbox.addStretch(1)
-        hbox.addWidget(self.make_download_button())
+        hbox.addWidget(self._make_download_button())
         vbox.addLayout(hbox)
 
         vbox.setAlignment(Qt.AlignBottom)
@@ -56,7 +54,7 @@ class ChapterListWidget(QFrame):
 
         return vbox
 
-    def make_favorite_checkbox(self):
+    def _make_favorite_checkbox(self):
         """Create a custom checkbox for marking favorites."""
         checkbox = QCheckBox()
         checkbox.setToolTip('Favorite')
@@ -74,7 +72,7 @@ class ChapterListWidget(QFrame):
         ''')
         return checkbox
 
-    def make_download_button(self):
+    def _make_download_button(self):
         """Create a menu button for downloading multiple chapters."""
         button = QPushButton('Download all')
         menu = QMenu()
@@ -88,7 +86,7 @@ class ChapterListWidget(QFrame):
         button.setMenu(menu)
         return button
 
-    def add_bottom_frame(self):
+    def _add_bottom_frame(self):
         """Add bottom frame with chapter list."""
         scroll_area = QScrollArea()
         scroll_area.setWidget(QWidget())
@@ -109,12 +107,15 @@ class ChapterListWidget(QFrame):
         hbox.addWidget(QLabel('No chapters yet.'))
         hbox.setAlignment(Qt.AlignHCenter)
         self.chapter_area_layout.addLayout(hbox)
+        return hbox
 
     def add_chapter_entry(self, chapter):
         """Create an entry for the chapter list."""
         if self.chapter_area_layout.children():
             self.chapter_area_layout.addWidget(HorizontalLine())
-        self.chapter_area_layout.addLayout(ChapterListEntryLayout(chapter))
+        entry = ChapterListEntryLayout(self, chapter)
+        self.chapter_area_layout.addLayout(entry)
+        return entry
 
 
 class ChapterListEntryLayout(QHBoxLayout):
@@ -124,6 +125,11 @@ class ChapterListEntryLayout(QHBoxLayout):
         """Create an entry for the chapter list."""
         super(ChapterListEntryLayout, self).__init__()
 
+        self.download_available = False
+        self.has_downloaded = False
+        self.convert_available = False
+        self.has_converted = False
+
         self.light_download_icon = QPixmap(ICONS['LIGHT_DOWNLOAD'])
         self.light_pdf_icon = QPixmap(ICONS['LIGHT_PDF'])
 
@@ -131,19 +137,36 @@ class ChapterListEntryLayout(QHBoxLayout):
         self.dark_pdf_icon = QPixmap(ICONS['DARK_PDF'])
 
         self.check_icon = QPixmap(ICONS['SOLID_CHECK'])
+        self.pending_icon = QPixmap(ICONS['YELLOW_STATUS'])
 
         self.chapter = chapter
         self.init_ui()
+
+    @property
+    def download_icon(self):
+        """Get the current download icon."""
+        if self.download_available:
+            return self.dark_download_icon
+        return self.light_download_icon
+
+    @property
+    def pdf_icon(self):
+        """Get the current pdf icon."""
+        if self.convert_available:
+            return self.dark_pdf_icon
+        return self.light_pdf_icon
 
     def init_ui(self):
         """Build a chapter list entry with icons."""
         self.addWidget(QLabel(self.chapter))
         self.addStretch(1)
 
-        self.addWidget(self.make_download_icon())
-        self.addWidget(self.make_pdf_icon())
+        self.download_button = self._make_download_icon()
+        self.addWidget(self.download_button)
+        self.convert_button = self._make_pdf_icon()
+        self.addWidget(self.convert_button)
 
-    def make_download_icon(self):
+    def _make_download_icon(self):
         """Make a download icon to add to the chapter list entry."""
         download_label = QLabel()
         download_label.setCursor(Qt.PointingHandCursor)
@@ -162,10 +185,11 @@ class ChapterListEntryLayout(QHBoxLayout):
         # download_label.mousePressEvent = lambda event: print(self.chapter)
 
         download_label.setPixmap(self.light_download_icon)
+        download_label.setEnabled(False)
 
         return download_label
 
-    def make_pdf_icon(self):
+    def _make_pdf_icon(self):
         """Make a pdf convert icon to add to the chapter list entry."""
         pdf_label = QLabel()
         pdf_label.setCursor(Qt.PointingHandCursor)
@@ -180,13 +204,120 @@ class ChapterListEntryLayout(QHBoxLayout):
         )
 
         pdf_label.setPixmap(self.light_pdf_icon)
+        pdf_label.setEnabled(False)
 
         return pdf_label
 
-    def paint_checkmark(self, pixmap):
+    def _paint_checkmark(self, pixmap):
         """Paint a checkmark on the given pixmap."""
         painter = QPainter()
         painter.begin(pixmap)
         painter.drawPixmap(5, 5, 10, 10, self.check_icon)
         painter.end()
         return pixmap
+
+    def _paint_pending(self, pixmap):
+        """Paint a pending dot on the given pixmap."""
+        painter = QPainter()
+        painter.begin(pixmap)
+        painter.drawPixmap(5, 5, 10, 10, self.pending_icon)
+        painter.end()
+        return pixmap
+
+    def mark_as_complete(self, button_type):
+        """Mark the given button type as complete.
+
+        Note that button_type must be either 'download' or 'convert'.
+        """
+        if button_type == 'download':
+            button = self.download_button
+            self.has_downloaded = True
+        elif button_type == 'convert':
+            button = self.convert_button
+            self.has_converted = True
+        else:
+            raise ValueError('Button type must be "download" or "convert".')
+
+        pixmap = button.pixmap()
+        self._paint_checkmark(pixmap)
+        button.setPixmap(pixmap)
+
+    def mark_as_pending(self, button_type):
+        """Mark the given button type as pending.
+
+        Note that button_type must be either 'download' or 'convert'.
+        """
+        if button_type == 'download':
+            button = self.download_button
+        elif button_type == 'convert':
+            button = self.convert_button
+        else:
+            raise ValueError('Button type must be "download" or "convert".')
+
+        pixmap = button.pixmap()
+        self._paint_pending(pixmap)
+        button.setPixmap(pixmap)
+
+    def mark_as_available(self, button_type):
+        """Mark the given button type as available.
+
+        Note that button_type must be either 'download' or 'convert'.
+        """
+        if button_type == 'download':
+            button = self.download_button
+            self.download_available = True
+            pixmap = self.download_icon
+            complete = self.has_downloaded
+        elif button_type == 'convert':
+            button = self.convert_button
+            self.convert_available = True
+            pixmap = self.pdf_icon
+            complete = self.has_converted
+        else:
+            raise ValueError('Button type must be "download" or "convert".')
+
+        button.setPixmap(pixmap)
+        button.setEnabled(True)
+        if complete:
+            self.mark_as_complete(button_type)
+
+    def mark_as_unavailable(self, button_type):
+        """Mark the given button type as unavailable.
+
+        Note that button_type must be either 'download' or 'convert'.
+        """
+        if button_type == 'download':
+            button = self.download_button
+            self.download_available = False
+            pixmap = self.download_icon
+            complete = self.has_downloaded
+        elif button_type == 'convert':
+            button = self.convert_button
+            self.convert_available = False
+            pixmap = self.pdf_icon
+            complete = self.has_converted
+        else:
+            raise ValueError('Button type must be "download" or "convert".')
+
+        button.setPixmap(pixmap)
+        button.setEnabled(False)
+        if complete:
+            self.mark_as_complete(button_type)
+
+    def remove_marks(self, button_type):
+        """Remove pending and complete marks from the given button type.
+
+        Note that button_type must be either 'download' or 'convert'.
+        """
+        if button_type == 'download':
+            button = self.download_button
+            pixmap = self.download_icon
+            self.has_downloaded = False
+        elif button_type == 'convert':
+            button = self.convert_button
+            pixmap = self.pdf_icon
+            self.has_converted = False
+        else:
+            raise ValueError('Button type must be "download" or "convert".')
+
+        button.setPixmap(pixmap)

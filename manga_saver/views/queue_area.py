@@ -27,9 +27,9 @@ class QueueArea(QScrollArea):
         self.layout = QVBoxLayout(self.widget())
         self.layout.setAlignment(Qt.AlignTop)
 
-    def add_queue_item(self, series_title, chapter):
+    def add_queue_item(self, series_title, chapter, download, convert):
         """Add a queue item to the queue area."""
-        item = QueueAreaItem(series_title, chapter)
+        item = QueueAreaItem(series_title, chapter, download, convert)
         self.layout.addWidget(item)
         return item
 
@@ -37,12 +37,14 @@ class QueueArea(QScrollArea):
 class QueueAreaItem(QFrame):
     """Item to display in the queue."""
 
-    def __init__(self, series_title, chapter):
+    def __init__(self, series_title, chapter, download, convert):
         """Create an item for the queue."""
         super(QueueAreaItem, self).__init__()
 
         self.series_title = series_title
         self.chapter = chapter
+        self.for_download = download
+        self.for_convert = convert
 
         self.download_icon = QPixmap(ICONS['DARK_DOWNLOAD'])
         self.pdf_icon = QPixmap(ICONS['DARK_PDF'])
@@ -58,12 +60,14 @@ class QueueAreaItem(QFrame):
         hbox.addWidget(QLabel(f'{self.series_title} - {self.chapter}'))
         hbox.addStretch(1)
 
-        icon = QLabel()
-        icon.setPixmap(self.download_icon)
-        hbox.addWidget(icon)
-        icon = QLabel()
-        icon.setPixmap(self.pdf_icon)
-        hbox.addWidget(icon)
+        if self.for_download:
+            icon = QLabel()
+            icon.setPixmap(self.download_icon)
+            hbox.addWidget(icon)
+        if self.for_convert:
+            icon = QLabel()
+            icon.setPixmap(self.pdf_icon)
+            hbox.addWidget(icon)
         self.layout.addLayout(hbox)
 
         self.status_label = QLabel()
