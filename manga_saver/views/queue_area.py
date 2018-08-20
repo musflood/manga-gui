@@ -1,4 +1,4 @@
-"""Widget for the queue of items to download or convert."""
+"""Widgets for the queue of items to download or convert."""
 from PyQt5.QtWidgets import (QScrollArea, QVBoxLayout, QFrame, QLabel,
                              QWidget, QProgressBar, QStyleFactory, QHBoxLayout)
 from PyQt5.QtGui import QPixmap
@@ -57,7 +57,9 @@ class QueueAreaItem(QFrame):
 
         self.layout = QVBoxLayout(self)
         hbox = QHBoxLayout()
-        hbox.addWidget(QLabel(f'{self.series_title} - {self.chapter}'))
+        title_label = QLabel(f'{self.series_title} - {self.chapter}')
+        title_label.setWordWrap(True)
+        hbox.addWidget(title_label)
         hbox.addStretch(1)
 
         if self.for_download:
@@ -79,7 +81,7 @@ class QueueAreaItem(QFrame):
         progress_bar.setTextVisible(True)
         progress_bar.setMinimum(0)
         progress_bar.setMaximum(1)
-        # use .setValue() to update the current page number
+
         self.layout.addWidget(progress_bar)
         self.progress_bar = progress_bar
 
@@ -92,3 +94,11 @@ class QueueAreaItem(QFrame):
         """Display start of conversion status."""
         self.status_label.setText('Converting...')
         self.progress_bar.setMaximum(0)
+
+    def set_total_pages(self, num):
+        """Set the total number of pages in the chapter."""
+        self.progress_bar.setMaximum(num)
+
+    def set_current_page(self, num):
+        """Set the current page being downloaded."""
+        self.progress_bar.setValue(num)

@@ -1,4 +1,4 @@
-"""Widget for the list of chapters for a series."""
+"""Widgets for the list of chapters for a series."""
 from PyQt5.QtWidgets import (QFrame, QVBoxLayout, QLabel,
                              QScrollArea, QCheckBox, QHBoxLayout,
                              QWidget, QPushButton, QMenu)
@@ -113,9 +113,16 @@ class ChapterListWidget(QFrame):
         """Create an entry for the chapter list."""
         if self.chapter_area_layout.children():
             self.chapter_area_layout.addWidget(HorizontalLine())
-        entry = ChapterListEntryLayout(self, chapter)
+        entry = ChapterListEntryLayout(chapter)
         self.chapter_area_layout.addLayout(entry)
         return entry
+
+    def clear_chapters(self):
+        """Remove all the chapter entries from the chapter list."""
+        while self.chapter_area_layout.count():
+            item = self.chapter_area_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
 
 
 class ChapterListEntryLayout(QHBoxLayout):
@@ -125,10 +132,10 @@ class ChapterListEntryLayout(QHBoxLayout):
         """Create an entry for the chapter list."""
         super(ChapterListEntryLayout, self).__init__()
 
-        self.download_available = False
-        self.has_downloaded = False
-        self.convert_available = False
-        self.has_converted = False
+        self._download_available = False
+        self._has_downloaded = False
+        self._convert_available = False
+        self._has_converted = False
 
         self.light_download_icon = QPixmap(ICONS['LIGHT_DOWNLOAD'])
         self.light_pdf_icon = QPixmap(ICONS['LIGHT_PDF'])
@@ -145,14 +152,14 @@ class ChapterListEntryLayout(QHBoxLayout):
     @property
     def download_icon(self):
         """Get the current download icon."""
-        if self.download_available:
+        if self._download_available:
             return self.dark_download_icon
         return self.light_download_icon
 
     @property
     def pdf_icon(self):
         """Get the current pdf icon."""
-        if self.convert_available:
+        if self._convert_available:
             return self.dark_pdf_icon
         return self.light_pdf_icon
 
@@ -208,22 +215,6 @@ class ChapterListEntryLayout(QHBoxLayout):
 
         return pdf_label
 
-    def _paint_checkmark(self, pixmap):
-        """Paint a checkmark on the given pixmap."""
-        painter = QPainter()
-        painter.begin(pixmap)
-        painter.drawPixmap(5, 5, 10, 10, self.check_icon)
-        painter.end()
-        return pixmap
-
-    def _paint_pending(self, pixmap):
-        """Paint a pending dot on the given pixmap."""
-        painter = QPainter()
-        painter.begin(pixmap)
-        painter.drawPixmap(5, 5, 10, 10, self.pending_icon)
-        painter.end()
-        return pixmap
-
     def mark_as_complete(self, button_type):
         """Mark the given button type as complete.
 
@@ -231,16 +222,24 @@ class ChapterListEntryLayout(QHBoxLayout):
         """
         if button_type == 'download':
             button = self.download_button
-            self.has_downloaded = True
+            self._has_downloaded = True
         elif button_type == 'convert':
             button = self.convert_button
-            self.has_converted = True
+            self._has_converted = True
         else:
             raise ValueError('Button type must be "download" or "convert".')
 
         pixmap = button.pixmap()
         self._paint_checkmark(pixmap)
         button.setPixmap(pixmap)
+
+    def _paint_checkmark(self, pixmap):
+        """Paint a checkmark on the given pixmap."""
+        painter = QPainter()
+        painter.begin(pixmap)
+        painter.drawPixmap(5, 5, 10, 10, self.check_icon)
+        painter.end()
+        return pixmap
 
     def mark_as_pending(self, button_type):
         """Mark the given button type as pending.
@@ -258,6 +257,14 @@ class ChapterListEntryLayout(QHBoxLayout):
         self._paint_pending(pixmap)
         button.setPixmap(pixmap)
 
+    def _paint_pending(self, pixmap):
+        """Paint a pending dot on the given pixmap."""
+        painter = QPainter()
+        painter.begin(pixmap)
+        painter.drawPixmap(5, 5, 10, 10, self.pending_icon)
+        painter.end()
+        return pixmap
+
     def mark_as_available(self, button_type):
         """Mark the given button type as available.
 
@@ -265,14 +272,14 @@ class ChapterListEntryLayout(QHBoxLayout):
         """
         if button_type == 'download':
             button = self.download_button
-            self.download_available = True
+            self._download_available = True
             pixmap = self.download_icon
-            complete = self.has_downloaded
+            complete = self._has_downloaded
         elif button_type == 'convert':
             button = self.convert_button
-            self.convert_available = True
+            self._convert_available = True
             pixmap = self.pdf_icon
-            complete = self.has_converted
+            complete = self._has_converted
         else:
             raise ValueError('Button type must be "download" or "convert".')
 
@@ -288,14 +295,14 @@ class ChapterListEntryLayout(QHBoxLayout):
         """
         if button_type == 'download':
             button = self.download_button
-            self.download_available = False
+            self._download_available = False
             pixmap = self.download_icon
-            complete = self.has_downloaded
+            complete = self._has_downloaded
         elif button_type == 'convert':
             button = self.convert_button
-            self.convert_available = False
+            self._convert_available = False
             pixmap = self.pdf_icon
-            complete = self.has_converted
+            complete = self._has_converted
         else:
             raise ValueError('Button type must be "download" or "convert".')
 
@@ -312,12 +319,24 @@ class ChapterListEntryLayout(QHBoxLayout):
         if button_type == 'download':
             button = self.download_button
             pixmap = self.download_icon
-            self.has_downloaded = False
+            self._has_downloaded = False
         elif button_type == 'convert':
             button = self.convert_button
             pixmap = self.pdf_icon
-            self.has_converted = False
+            self._has_converted = False
         else:
             raise ValueError('Button type must be "download" or "convert".')
 
         button.setPixmap(pixmap)
+
+    def widget(self):
+        """Get the layout itself."""
+        return self
+
+    def deleteLater(self):
+        """Delete the entire list entry widget."""
+        while self.count():
+            item = self.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        super(ChapterListEntryLayout, self).deleteLater()

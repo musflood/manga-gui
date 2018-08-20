@@ -1,14 +1,15 @@
 """Main window frame for the GUI."""
 from PyQt5.QtWidgets import (QMainWindow, QHBoxLayout, QFrame,
-                             QAction, QDockWidget, QListWidget, QSplitter,
-                             QComboBox, QWidget, QSizePolicy, QLineEdit,
-                             QToolBar, QDesktopWidget, QStyleFactory)
+                             QAction, QDockWidget, QSplitter, QComboBox,
+                             QWidget, QSizePolicy, QLineEdit, QToolBar,
+                             QDesktopWidget, QStyleFactory)
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QSize
 
 from manga_saver.views import ICONS
 from manga_saver.views.chapter_list import ChapterListWidget
 from manga_saver.views.queue_area import QueueArea
+from manga_saver.views.fav_series_list import FavSeriesListWidget
 
 
 class MainWindow(QMainWindow):
@@ -51,9 +52,9 @@ class MainWindow(QMainWindow):
     def _add_main_area(self):
         """Add the main area with the series list and chapter list areas."""
         fav_series_area = QFrame()
-        fav_series_area.setMaximumWidth(200)
+        fav_series_area.setMaximumWidth(250)
         box = QHBoxLayout(fav_series_area)
-        fav_series_list = QListWidget()
+        fav_series_list = FavSeriesListWidget()
         box.addWidget(fav_series_list)
 
         chapter_area = ChapterListWidget('Series title')
@@ -62,11 +63,11 @@ class MainWindow(QMainWindow):
         splitter.addWidget(fav_series_area)
         splitter.addWidget(chapter_area)
         splitter.setCollapsible(1, False)
-        splitter.setSizes([200])
+        splitter.setSizes([250])
 
         self.setCentralWidget(splitter)
 
-        return fav_series_area, chapter_area
+        return fav_series_list, chapter_area
 
     def _add_queue_area(self):
         """Add the dock area for the download queue."""
