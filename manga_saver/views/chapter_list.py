@@ -123,6 +123,8 @@ class ChapterListWidget(QFrame):
             item = self.chapter_area_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+            elif hasattr(item, 'deleteLater'):
+                item.deleteLater()
 
 
 class ChapterListEntryLayout(QHBoxLayout):
@@ -328,10 +330,6 @@ class ChapterListEntryLayout(QHBoxLayout):
             raise ValueError('Button type must be "download" or "convert".')
 
         button.setPixmap(pixmap)
-
-    def widget(self):
-        """Get the layout itself."""
-        return self
 
     def deleteLater(self):
         """Delete the entire list entry widget."""

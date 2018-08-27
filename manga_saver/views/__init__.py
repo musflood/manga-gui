@@ -6,8 +6,9 @@ from PyQt5.QtWidgets import QFrame
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESOURCE_DIR = os.path.join(BASE_DIR, 'resources')
 ICON_DIR = os.path.join(RESOURCE_DIR, 'icons')
+LOGO_DIR = os.path.join(RESOURCE_DIR, 'logos')
 
-# Icon files
+# Icon file
 ICONS = {
     'SEARCH': os.path.join(ICON_DIR, 'search.png'),
 
@@ -26,7 +27,11 @@ ICONS = {
     'OUTLINE_CHECK_WHITE': os.path.join(ICON_DIR, 'check_outline_white.png'),
 
     'SOLID_STAR': os.path.join(ICON_DIR, 'star_filled.png'),
-    'OUTLINE_STAR': os.path.join(ICON_DIR, 'star_outline.png'),
+    'OUTLINE_STAR': os.path.join(ICON_DIR, 'star_outline.png')
+}
+
+LOGOS = {
+    '100x100': os.path.join(LOGO_DIR, 'saber_small.png')
 }
 
 
