@@ -11,6 +11,7 @@ from manga_saver.views import ICONS, LOGOS
 from manga_saver.views.chapter_list import ChapterListWidget
 from manga_saver.views.queue_area import QueueArea
 from manga_saver.views.fav_series_list import FavSeriesListWidget
+from manga_saver.views.settings_window import SettingsWindow
 
 
 class MainWindow(QMainWindow):
@@ -38,6 +39,8 @@ class MainWindow(QMainWindow):
         self.chapter_area = self.main_stack.widget(2)
 
         self.queue_dock, self.queue_area = self._add_queue_area()
+
+        self.settings_window = SettingsWindow()
 
         self._add_menubar()
 
@@ -87,7 +90,7 @@ class MainWindow(QMainWindow):
         searching_area.setLayout(hbox)
         loading = QLabel()
         hbox.addWidget(loading)
-        gif = QMovie(LOGOS['animate'])
+        gif = QMovie(LOGOS['100x100'])
         loading.setMovie(gif)
         gif.start()
         main_stack.addWidget(searching_area)
@@ -122,6 +125,7 @@ class MainWindow(QMainWindow):
         menubar = self.menuBar()
         file_menu = menubar.addMenu('File')
         pref_act = QAction('Preferences', self)
+        pref_act.triggered.connect(lambda: self.settings_window.show())
         file_menu.addAction(pref_act)
 
         view_menu = menubar.addMenu('View')

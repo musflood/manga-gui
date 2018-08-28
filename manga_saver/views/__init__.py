@@ -27,7 +27,11 @@ ICONS = {
     'OUTLINE_CHECK_WHITE': os.path.join(ICON_DIR, 'check_outline_white.png'),
 
     'SOLID_STAR': os.path.join(ICON_DIR, 'star_filled.png'),
-    'OUTLINE_STAR': os.path.join(ICON_DIR, 'star_outline.png')
+    'OUTLINE_STAR': os.path.join(ICON_DIR, 'star_outline.png'),
+
+    'SETTINGS_GENERAL': os.path.join(ICON_DIR, 'settings.png'),
+    'SETTINGS_SOURCE': os.path.join(ICON_DIR, 'network.png'),
+    'SETTINGS_SERIES': os.path.join(ICON_DIR, 'books.png'),
 }
 
 LOGOS = {
