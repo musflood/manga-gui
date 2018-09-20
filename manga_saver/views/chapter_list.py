@@ -1,7 +1,7 @@
 """Widgets for the list of chapters for a series."""
 from PyQt5.QtWidgets import (QFrame, QVBoxLayout, QLabel,
                              QScrollArea, QCheckBox, QHBoxLayout,
-                             QWidget, QPushButton, QMenu)
+                             QWidget, QPushButton, QMenu, QToolButton)
 from PyQt5.QtGui import QFont, QPixmap, QPainter
 from PyQt5.QtCore import Qt
 
@@ -45,7 +45,7 @@ class ChapterListWidget(QFrame):
         date_label = QLabel('minutes ago')
         hbox.addWidget(date_label)
         hbox.addStretch(1)
-        hbox.addWidget(self._make_download_button())
+        hbox.addLayout(self._make_download_button())
         vbox.addLayout(hbox)
 
         vbox.setAlignment(Qt.AlignBottom)
@@ -74,7 +74,37 @@ class ChapterListWidget(QFrame):
 
     def _make_download_button(self):
         """Create a menu button for downloading multiple chapters."""
+        hbox = QHBoxLayout()
+        hbox.setSpacing(0)
+        hbox.setContentsMargins(0, 0, 0, 0)
+
         button = QPushButton('Download all')
+        hbox.addWidget(button)
+
+        button = QToolButton()
+        button.setArrowType(Qt.DownArrow)
+        button.setPopupMode(QToolButton.InstantPopup)
+        button.setStyleSheet(f'''
+            QToolButton {{
+                background: #4594EE;
+                border: 0;
+                border-radius: 2px;
+                margin-top: 2px;
+                width: 5px;
+                padding-left: 3px;
+                padding-right: 3px;
+            }}
+
+            QToolButton::down-arrow {{
+                image: url({ICONS["DOWN_ARROW"]})
+            }}
+
+            QToolButton::menu-indicator {{
+                width: 0;
+                height: 0;
+            }}
+        ''')
+        hbox.addWidget(button)
         menu = QMenu()
         menu.addAction('Download all available chapters')
         menu.addAction(
@@ -84,7 +114,7 @@ class ChapterListWidget(QFrame):
         menu.addAction(
             'Download all undownloaded chapters and convert to PDF')
         button.setMenu(menu)
-        return button
+        return hbox
 
     def _add_bottom_frame(self):
         """Add bottom frame with chapter list."""
