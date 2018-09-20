@@ -4,6 +4,7 @@ import os
 from PyQt5.QtWidgets import QFrame
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+APPLICATION_DIR = os.path.dirname(BASE_DIR)
 RESOURCE_DIR = os.path.join(BASE_DIR, 'resources')
 ICON_DIR = os.path.join(RESOURCE_DIR, 'icons')
 LOGO_DIR = os.path.join(RESOURCE_DIR, 'logos')
