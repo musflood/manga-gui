@@ -12,6 +12,8 @@ LOGO_DIR = os.path.join(RESOURCE_DIR, 'logos')
 # Icon file
 ICONS = {
     'DOWN_ARROW': os.path.join(ICON_DIR, 'down_arrow.png'),
+    'PLUS': os.path.join(ICON_DIR, 'plus.png'),
+    'MINUS': os.path.join(ICON_DIR, 'minus.png'),
 
     'SEARCH': os.path.join(ICON_DIR, 'search.png'),
 

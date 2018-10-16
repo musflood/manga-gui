@@ -1,7 +1,7 @@
 """Settings window for the application."""
-from PyQt5.QtWidgets import (QTabWidget, QTabBar, QFrame, QLabel,
-                             QVBoxLayout, QHBoxLayout, QGroupBox,
-                             QFormLayout, QCheckBox, QComboBox,
+from PyQt5.QtWidgets import (QTabWidget, QTabBar, QFrame, QLabel, QAction,
+                             QVBoxLayout, QHBoxLayout, QGroupBox, QToolBar,
+                             QFormLayout, QCheckBox, QListWidget,
                              QGridLayout, QLineEdit, QPushButton, QFileDialog)
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
@@ -34,12 +34,12 @@ class SettingsWindow(QTabWidget):
             }
 
             #settings-window::tab-bar {
-                left: 10px;
+                left: 5px;
             }
 
             #settings-tabs::tab {
                 border: none;
-                margin-top: 10px;
+                margin-top: 5px;
             }
 
             #settings-tabs::tab:last {
@@ -56,7 +56,7 @@ class SettingsWindow(QTabWidget):
         general = self._make_general_tab()
         self.set_general_settings()
 
-        sources = QFrame()
+        sources = self._make_sources_tab()
 
         series = QFrame()
 
@@ -125,7 +125,9 @@ class SettingsWindow(QTabWidget):
         hbox.addWidget(group)
         hbox.addStretch(1)
 
+        group_vbox = QVBoxLayout(group)
         layout = QGridLayout()
+        group_vbox.addLayout(layout)
 
         label = QLabel('Chapter directory:')
         line_edit = QLineEdit()
@@ -149,9 +151,7 @@ class SettingsWindow(QTabWidget):
         layout.addWidget(label, 3, 1, 1, 2)
         self.general_download_new_cb = check
 
-        group.setLayout(layout)
-        group.setMinimumSize(group.sizeHint())
-        group.setMaximumSize(group.sizeHint())
+        group_vbox.addStretch(1)
 
         hbox = QHBoxLayout()
         vbox.addLayout(hbox)
@@ -162,8 +162,95 @@ class SettingsWindow(QTabWidget):
 
         return frame
 
+    def get_sources_settings(self):
+        """Get the current settings in the sources tab."""
+        pass
+
+    def _make_sources_tab(self):
+        """Create the sources settings tab contents."""
+        frame = QFrame()
+        vbox = QVBoxLayout(frame)
+        hbox = QHBoxLayout()
+        vbox.addLayout(hbox)
+
+        source_list = ToolbarListLayout()
+        hbox.addLayout(source_list, stretch=1)
+
+        add_icon = QIcon(ICONS['PLUS'])
+        add_act = QAction(add_icon, 'Add Source', source_list.toolbar)
+        # add_act.triggered.connect()
+        source_list.toolbar.addAction(add_act)
+        remove_icon = QIcon(ICONS['MINUS'])
+        remove_act = QAction(remove_icon, 'Remove Source', source_list.toolbar)
+        # remove_act.triggered.connect()
+        source_list.toolbar.addAction(remove_act)
+
+        group = QGroupBox()
+        hbox.addWidget(group, stretch=3)
+        group_vbox = QVBoxLayout(group)
+        form = QFormLayout()
+        group_vbox.addLayout(form)
+        form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        form.addRow('Source Name:', QLineEdit())
+        form.addRow('Index URL:', QLineEdit())
+        form.addRow('Slug Filler:', QLineEdit())
+        group_vbox.addStretch(1)
+        adv_button = QPushButton('Advanced...')
+        group_hbox = QHBoxLayout()
+        group_vbox.addLayout(group_hbox)
+        group_hbox.addStretch(1)
+        group_hbox.addWidget(adv_button)
+
+        hbox = QHBoxLayout()
+        vbox.addLayout(hbox)
+        hbox.addStretch(1)
+        save_button = QPushButton('Apply')
+        save_button.clicked.connect(lambda: print(self.get_sources_settings()))
+        hbox.addWidget(save_button)
+
+        return frame
+
     def _set_download_folder(self):
         """Show a file dialogue to set the chapter download destination."""
         dest_dir = QFileDialog.getExistingDirectory(self, 'Choose destination')
         if dest_dir:
             self.general_dir_le.setText(dest_dir)
+
+
+class ToolbarListLayout(QVBoxLayout):
+    """QListWidget with a toolbar attached to the bottom."""
+
+    def __init__(self, *args, **kwargs):
+        """Create the list widget."""
+        super(ToolbarListLayout, self).__init__(*args, **kwargs)
+        self.init_ui()
+
+    def init_ui(self):
+        """Build the list widget."""
+        self.setSpacing(0)
+
+        item_list = QListWidget()
+        self.addWidget(item_list)
+        item_list.setSortingEnabled(True)
+        self.item_list = item_list
+
+        toolbar = QToolBar()
+        self.addWidget(toolbar)
+        toolbar.setStyleSheet('''
+            QToolBar {
+                background: #DDD;
+                border: 1px solid #BBB;
+                border-top: 1px solid #DDD;
+                icon-size: 10px;
+                spacing: 0;
+            }
+            QToolButton {
+                border: none;
+                border-right: 1px solid #BBB;
+                padding: 2px 4px;
+            }
+            QToolButton:pressed {
+                background: #BBB;
+            }
+        ''')
+        self.toolbar = toolbar
