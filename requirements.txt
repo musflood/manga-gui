@@ -5,7 +5,7 @@ chardet==3.0.4
 coverage==4.5.1
 idna==2.6
 more-itertools==4.1.0
-Pillow==5.0.0
+Pillow==6.2.0
 pluggy==0.6.0
 py==1.5.3
 PyPDF2==1.26.0
