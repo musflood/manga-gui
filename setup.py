@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 requires = [
     'beautifulsoup4',
-    'Pillow == 5.0.0',
+    'Pillow == 8.3.2',
     'PyPDF2',
     'requests'
 ]
